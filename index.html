@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+</head>
+<body style="margin:0">
+<title>Al-Aqsa Prayer Times</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: the next prayer as one burgundy slab beside the day's six times, a to-scale day band below, the full month one tab away. */
+:root{
+  color-scheme:dark;
+  --charcoal:#222427; --charcoal-up:#2c2f33; --charcoal-top:#373a3f; --line:#44474c;
+  --burgundy:#6e1a30; --burgundy-up:#872540; --rose:#e8aebb;
+  --fg:#f3f1ef; --muted:#b5b3b1; --on-b:#fff6f3; --on-b-muted:#e9ccd2;
+  --font:"Segoe UI","Segoe UI Web","Selawik",system-ui,-apple-system,"Noto Sans Arabic",sans-serif;
+  --s-xs:.8125rem; --s-sm:.9375rem; --s-md:1.0625rem; --s-lg:1.375rem;
+  --s:1;
+}
+[dir=rtl]{--s:-1}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--charcoal);color:var(--fg);font-family:var(--font);font-size:1rem;line-height:1.45}
+button,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--rose);outline-offset:2px}
+.app{max-width:1120px;margin-inline:auto;padding-block:20px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:20px}
+.num{font-variant-numeric:tabular-nums}
+bdi{unicode-bidi:isolate}
+
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;justify-content:space-between}
+.brand{min-width:0}
+.brand h1{margin:0;font-size:var(--s-lg);font-weight:600;line-height:1.2}
+.brand p{margin:2px 0 0;color:var(--muted);font-size:var(--s-sm)}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.field{display:flex;align-items:center;gap:8px;min-height:44px;padding-inline:12px;background:var(--charcoal-up);border:1px solid var(--line);border-radius:8px}
+.field span{color:var(--muted);font-size:var(--s-sm)}
+.field select{background:transparent;border:0;min-height:42px;font-weight:600;max-width:190px}
+.field select option,.field select optgroup{background:var(--charcoal-up);color:var(--fg)}
+.field:focus-within{border-color:var(--rose)}
+.seg{display:inline-flex;background:var(--charcoal-up);border:1px solid var(--line);border-radius:8px;padding:3px}
+.seg button{min-height:36px;min-width:44px;padding-inline:12px;background:none;border:0;border-radius:5px;cursor:pointer;color:var(--muted);font-size:var(--s-sm)}
+.seg button:hover{color:var(--fg)}
+.seg button[aria-pressed=true]{background:var(--charcoal-top);color:var(--fg);font-weight:600}
+
+.grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:20px;align-items:stretch}
+.hero{background:var(--burgundy);color:var(--on-b);border-radius:14px;padding:clamp(22px,4vw,36px);display:flex;flex-direction:column;justify-content:space-between;gap:28px;min-width:0}
+.hero .where{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 16px;font-size:var(--s-sm);color:var(--on-b-muted)}
+.hero .label{font-size:var(--s-sm);color:var(--on-b-muted);margin:0}
+.hero h2{margin:2px 0 0;font-size:clamp(3.25rem,9vw,5.75rem);font-weight:300;line-height:1.05;letter-spacing:-.015em}
+[dir=rtl] .hero h2{letter-spacing:0;font-weight:400}
+.hero .at{margin:8px 0 0;font-size:var(--s-lg)}
+.count{font-size:clamp(2.25rem,6vw,3.25rem);font-weight:600;line-height:1;margin:6px 0 0}
+html[dir=rtl] .count{text-align:right}
+
+.sched{background:var(--charcoal-up);border-radius:14px;padding:clamp(14px,2.4vw,20px);min-width:0;display:flex;flex-direction:column;gap:12px}
+.datebar{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;gap:6px}
+.datebar .d{text-align:center;min-width:0}
+.datebar strong{display:block;font-size:var(--s-md);font-weight:600}
+.datebar small{display:block;color:var(--muted);font-size:var(--s-xs)}
+.icon{width:44px;height:44px;border:1px solid var(--line);background:none;border-radius:8px;cursor:pointer;font-size:1.25rem;line-height:1}
+.icon:hover{background:var(--charcoal-top)}
+[dir=rtl] .icon svg{transform:scaleX(-1)}
+.icon svg{display:block;margin:auto}
+.rows{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.rows li{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:10px;min-height:50px;padding-inline:12px;border-radius:8px}
+.rows .nm{font-size:var(--s-md);font-weight:600;min-width:0}
+.rows .alt{color:var(--muted);font-size:var(--s-sm);font-weight:400;margin-inline-start:8px}
+.rows .tm{font-size:var(--s-lg);font-weight:600;min-width:6.1ch;text-align:end;grid-column:3}
+.rows .chip{grid-column:2;font-size:var(--s-xs);padding:2px 8px;border-radius:99px;white-space:nowrap}
+.rows li.soft .nm,.rows li.soft .tm{font-weight:400;color:var(--muted)}
+.rows li.past .nm,.rows li.past .tm{color:var(--muted);font-weight:400}
+.rows li.cur{background:var(--charcoal-top)}
+.rows li.cur .chip{border:1px solid var(--line);color:var(--fg)}
+.rows li.next{background:var(--burgundy);color:var(--on-b)}
+.rows li.next .alt{color:var(--on-b-muted)}
+.rows li.next .chip{background:var(--on-b);color:var(--burgundy)}
+.eid span:last-child{white-space:nowrap}
+.eid{margin:0;padding-inline:12px;color:var(--muted);font-size:var(--s-sm);display:flex;justify-content:space-between;gap:12px;border-top:1px solid var(--line);padding-top:10px;margin-top:auto}
+.back{align-self:center;background:none;border:0;color:var(--rose);min-height:32px;cursor:pointer;font-size:var(--s-sm);text-decoration:underline;text-underline-offset:3px}
+
+.bandwrap{background:var(--charcoal-up);border-radius:14px;padding:16px clamp(14px,2.4vw,24px)}
+.band{position:relative;height:124px}
+.track{position:absolute;inset-inline:0;top:50%;height:10px;margin-top:-5px;background:var(--charcoal);border-radius:5px;overflow:hidden}
+.daylight{position:absolute;top:0;bottom:0;background:var(--burgundy-up)}
+.mk{position:absolute;top:50%;width:2px;height:22px;margin-top:-11px;margin-inline-start:-1px;background:var(--fg);border-radius:1px}
+.nowmk{position:absolute;top:50%;width:10px;height:10px;margin-top:-5px;margin-inline-start:-5px;background:var(--charcoal);border:2px solid var(--rose);border-radius:50%}
+.lb{position:absolute;font-size:var(--s-xs);line-height:1.25;white-space:nowrap;text-align:center;transform:translateX(calc(-50% * var(--s)))}
+.lb.a{bottom:calc(50% + 16px)}.lb.b{top:calc(50% + 16px)}
+.lb.first{transform:none;text-align:start}.lb.last{transform:translateX(calc(-100% * var(--s)));text-align:end}
+.lb b{display:block;font-weight:600}.lb i{font-style:normal;color:var(--muted)}
+
+.tabs{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.tabs h3{margin:0;font-size:var(--s-lg);font-weight:600}
+.mnav{display:flex;align-items:center;gap:6px}
+.mnav .title{min-width:9.5em;text-align:center;font-weight:600}
+.tw{overflow-x:auto;background:var(--charcoal-up);border-radius:14px}
+table{border-collapse:collapse;width:100%;min-width:640px}
+th,td{padding:0 12px;height:44px;text-align:end;vertical-align:middle;white-space:nowrap;border-bottom:1px solid var(--charcoal-top)}
+thead th{height:48px;font-size:var(--s-sm);font-weight:600;color:var(--muted)}
+th:first-child,td:first-child{text-align:start}
+tbody tr:last-child td{border-bottom:0}
+td.soft{color:var(--muted)}
+.dbtn{background:none;border:0;cursor:pointer;display:flex;gap:10px;align-items:center;min-height:40px;padding:0;text-align:start}
+.dbtn b{font-weight:600;min-width:1.4em}.dbtn span{color:var(--muted);font-size:var(--s-sm)}
+.dbtn:hover span{color:var(--fg)}
+tr.sel td{background:var(--charcoal-top)}
+tr.today td{background:var(--burgundy);color:var(--on-b);border-color:var(--burgundy)}
+tr.today .dbtn span{color:var(--on-b-muted)}
+tr.shift td{color:var(--rose);font-size:var(--s-sm);text-align:start;height:36px}
+
+.notes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 32px;padding-top:12px;border-top:1px solid var(--line)}
+.notes h3{margin:0 0 6px;font-size:var(--s-md);font-weight:600}
+.notes p{margin:0 0 8px;color:var(--muted);font-size:var(--s-sm);max-width:62ch}
+.notes dl{margin:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 14px;font-size:var(--s-sm)}
+.notes dt{font-weight:600;white-space:nowrap}.notes dd{margin:0;color:var(--muted)}
+@media (max-width:860px){
+  .grid,.notes{grid-template-columns:minmax(0,1fr)}
+  .top{align-items:stretch}.controls{width:100%}
+  .field{flex:1 1 100%}.field select{flex:1;max-width:none}
+  .seg{flex:1}.seg button{flex:1}
+}
+@media (max-width:640px){
+  table{min-width:0}
+  th,td{padding:0 4px;font-size:var(--s-sm)}
+  thead th{font-size:.75rem}
+  th:first-child,td:first-child{padding-inline-start:10px}
+  th:last-child,td:last-child{padding-inline-end:10px}
+  .ap,.dbtn span{display:none}
+  .lb i{display:none}
+  .band{height:92px}
+}
+@media (max-width:420px){.rows .alt{display:none}.rows li{padding-inline:10px}}
+</style>
+
+<div class="app" id="app">
+  <header class="top">
+    <div class="brand"><h1 id="tName"></h1><p id="tSub"></p></div>
+    <div class="controls">
+      <label class="field"><span id="tCity"></span><select id="city"></select></label>
+      <div class="seg" role="group" id="fmtSeg"><button id="f12" type="button">12h</button><button id="f24" type="button">24h</button></div>
+      <div class="seg" role="group" aria-label="Language"><button id="lEn" type="button" lang="en">English</button><button id="lAr" type="button" lang="ar">عربي</button></div>
+    </div>
+  </header>
+
+  <div class="grid">
+    <section class="hero" aria-labelledby="nextName">
+      <div class="where"><span id="hWhere"></span><span id="hNow" class="num"></span></div>
+      <div>
+        <p class="label" id="hLabel"></p>
+        <h2 id="nextName"></h2>
+        <p class="at num" id="nextAt"></p>
+      </div>
+      <div>
+        <p class="label" id="hIn"></p>
+        <div class="count num" id="count" role="timer" dir="ltr"></div>
+      </div>
+    </section>
+
+    <section class="sched" aria-label="Selected day">
+      <div class="datebar">
+        <button class="icon" id="prev" type="button"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M11 3 5 9l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="d"><strong id="dG"></strong><small id="dH"></small></div>
+        <button class="icon" id="next" type="button"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="m7 3 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      </div>
+      <button class="back" id="back" type="button" hidden></button>
+      <ul class="rows" id="rows"></ul>
+      <p class="eid"><span id="eidL"></span><span class="num" id="eidV"></span></p>
+    </section>
+  </div>
+
+  <section class="bandwrap" aria-hidden="true"><div class="band" id="band"></div></section>
+
+  <section aria-labelledby="mTitle" style="display:grid;gap:12px">
+    <div class="tabs">
+      <h3 id="mTitle"></h3>
+      <div class="mnav">
+        <button class="icon" id="mPrev" type="button"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M11 3 5 9l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="title num" id="mLabel"></div>
+        <button class="icon" id="mNext" type="button"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="m7 3 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      </div>
+    </div>
+    <div class="tw" tabindex="0" id="tw"><table class="num"><thead id="mHead"></thead><tbody id="mBody"></tbody></table></div>
+  </section>
+
+  <footer class="notes" id="notes"></footer>
+</div>
+
+<script>
+const T=[[312,396,702,867,1012,1093],[312,396,703,868,1013,1093],[312,396,703,869,1014,1094],[312,396,704,870,1015,1095],[313,397,704,870,1015,1095],[313,397,704,871,1016,1096],[313,397,705,872,1017,1097],[313,397,705,872,1018,1097],[313,397,706,873,1019,1098],[313,397,706,874,1019,1099],[313,397,707,875,1020,1100],[313,397,707,875,1021,1100],[313,397,707,876,1022,1101],[313,397,708,877,1023,1102],[313,397,708,878,1024,1103],[313,396,708,879,1024,1103],[313,396,709,879,1025,1104],[313,396,709,880,1026,1105],[313,396,709,881,1027,1106],[313,395,710,882,1028,1106],[313,395,710,882,1029,1107],[312,395,710,883,1030,1108],[312,395,710,884,1031,1109],[312,394,711,885,1031,1110],[312,394,711,886,1032,1110],[311,394,711,886,1033,1111],[311,393,711,887,1034,1112],[311,392,712,888,1035,1113],[310,392,712,889,1036,1113],[310,391,712,889,1037,1114],[309,391,712,890,1038,1115],[309,390,712,891,1038,1116],[308,389,712,892,1039,1116],[308,389,712,892,1040,1117],[307,388,713,893,1041,1118],[306,387,713,894,1042,1119],[306,387,713,894,1043,1120],[305,386,713,895,1044,1120],[305,385,713,896,1045,1121],[304,384,713,896,1046,1122],[303,383,713,897,1046,1123],[302,383,713,898,1047,1123],[302,382,713,898,1048,1124],[301,381,713,899,1049,1125],[300,380,713,900,1050,1126],[299,379,713,900,1051,1126],[298,378,713,901,1051,1127],[297,377,713,901,1052,1128],[297,376,713,902,1053,1129],[296,375,713,903,1054,1129],[295,374,712,903,1055,1130],[294,373,712,904,1056,1131],[293,372,712,904,1056,1132],[292,371,712,905,1057,1132],[291,370,712,905,1058,1133],[290,369,712,906,1059,1134],[289,368,712,906,1060,1135],[288,367,711,907,1060,1135],[286,365,711,907,1061,1136],[286,365,711,907,1062,1136],[284,363,711,908,1063,1138],[283,362,711,908,1064,1138],[282,361,711,909,1064,1139],[281,360,710,909,1065,1140],[280,358,710,910,1066,1141],[278,357,710,910,1067,1141],[277,356,710,910,1067,1142],[276,355,709,911,1068,1143],[275,354,709,911,1069,1144],[274,352,709,911,1070,1144],[272,351,709,912,1070,1145],[271,350,708,912,1071,1146],[270,349,708,912,1072,1147],[268,347,708,912,1073,1148],[267,346,708,913,1073,1148],[266,345,707,913,1074,1149],[264,343,707,913,1075,1150],[263,342,707,913,1075,1151],[262,341,706,914,1076,1151],[260,340,706,914,1077,1152],[259,338,706,914,1078,1153],[257,337,706,914,1078,1154],[256,336,705,914,1079,1154],[255,334,705,914,1080,1155],[253,333,705,915,1080,1156],[252,332,704,915,1081,1157],[250,330,704,915,1082,1158],[249,329,704,915,1082,1159],[248,328,703,915,1083,1159],[246,327,703,915,1084,1160],[245,325,703,915,1085,1161],[243,324,703,915,1085,1162],[242,323,702,915,1086,1163],[240,321,702,915,1087,1164],[239,320,702,916,1087,1164],[238,319,701,916,1088,1165],[236,318,701,916,1089,1166],[235,316,701,916,1089,1167],[233,315,701,916,1090,1168],[232,314,700,916,1091,1169],[230,313,700,916,1091,1170],[229,311,700,916,1092,1170],[228,310,699,916,1093,1171],[226,309,699,916,1093,1172],[225,308,699,916,1094,1173],[223,307,699,916,1095,1174],[222,305,699,916,1096,1175],[221,304,698,916,1096,1176],[219,303,698,916,1097,1177],[218,302,698,916,1098,1178],[216,301,698,916,1098,1179],[215,300,697,916,1099,1180],[214,299,697,916,1100,1181],[212,298,697,916,1100,1181],[211,297,697,916,1101,1182],[210,295,697,916,1102,1183],[209,294,696,915,1102,1184],[207,293,696,915,1103,1185],[206,292,696,915,1104,1186],[205,291,696,915,1105,1187],[204,290,696,915,1105,1188],[202,290,696,915,1106,1189],[201,289,696,915,1107,1190],[200,288,695,915,1107,1191],[199,287,695,915,1108,1192],[198,286,695,915,1109,1193],[196,285,695,915,1109,1194],[195,284,695,915,1110,1195],[194,283,695,915,1111,1196],[193,283,695,915,1111,1197],[192,282,695,915,1112,1198],[191,281,695,915,1113,1199],[190,280,695,915,1114,1200],[189,280,695,915,1114,1201],[188,279,695,915,1115,1202],[187,278,695,915,1116,1203],[186,278,695,915,1116,1204],[186,277,695,915,1117,1204],[185,277,695,915,1117,1205],[184,276,695,916,1118,1206],[183,275,695,916,1119,1207],[182,275,695,916,1119,1208],[182,274,695,916,1120,1209],[181,274,695,916,1121,1210],[180,274,695,916,1121,1211],[179,273,695,916,1122,1211],[179,273,696,916,1122,1212],[178,272,696,916,1123,1213],[178,272,696,916,1124,1214],[177,272,696,916,1124,1215],[177,271,696,916,1125,1215],[176,271,696,917,1125,1216],[176,271,696,917,1126,1217],[175,271,697,917,1126,1218],[175,270,697,917,1127,1218],[175,270,697,917,1127,1219],[174,270,697,917,1128,1220],[174,270,697,917,1128,1220],[174,270,697,918,1129,1221],[174,270,698,918,1129,1221],[173,270,698,918,1130,1222],[173,270,698,918,1130,1223],[173,270,698,918,1130,1223],[173,270,698,919,1131,1224],[173,270,699,919,1131,1224],[173,270,699,919,1132,1224],[173,270,699,919,1132,1225],[173,270,699,919,1132,1225],[173,270,699,920,1133,1226],[173,270,700,920,1133,1226],[174,271,700,920,1133,1226],[174,271,700,920,1133,1226],[174,271,700,920,1134,1227],[174,272,701,921,1134,1227],[175,272,701,921,1134,1227],[175,272,701,921,1134,1227],[175,272,701,921,1134,1227],[176,272,701,921,1134,1227],[176,273,702,922,1134,1227],[176,273,702,922,1134,1227],[177,273,702,922,1134,1227],[177,274,702,922,1134,1227],[178,274,702,923,1134,1227],[178,275,703,923,1134,1227],[179,275,703,923,1134,1227],[179,276,703,923,1134,1226],[180,276,703,923,1134,1226],[181,276,703,924,1134,1226],[181,277,703,924,1134,1226],[182,277,704,924,1134,1225],[183,278,704,924,1134,1225],[183,278,704,924,1133,1224],[184,279,704,924,1133,1224],[185,280,704,925,1133,1224],[186,280,704,925,1133,1223],[186,281,704,925,1132,1222],[187,281,705,925,1132,1222],[188,282,705,925,1131,1221],[189,282,705,925,1131,1221],[190,283,705,925,1131,1220],[190,284,705,925,1130,1219],[191,284,705,925,1130,1219],[192,285,705,925,1129,1218],[193,285,705,925,1129,1217],[194,286,705,926,1128,1216],[195,287,705,926,1128,1215],[196,287,705,926,1127,1215],[197,288,705,926,1126,1214],[197,289,705,926,1126,1213],[198,289,705,925,1125,1212],[199,290,705,925,1124,1211],[200,290,705,925,1124,1210],[201,291,705,925,1123,1209],[202,292,705,925,1122,1208],[203,292,705,925,1121,1207],[204,293,705,925,1121,1206],[205,294,705,925,1120,1205],[206,294,705,925,1119,1203],[207,295,705,924,1118,1202],[208,296,704,924,1117,1201],[209,296,704,924,1116,1200],[209,297,704,924,1115,1199],[210,298,704,924,1114,1198],[211,298,704,923,1113,1196],[212,299,704,923,1112,1195],[213,300,704,923,1111,1194],[214,300,703,923,1110,1193],[215,301,703,922,1109,1191],[216,302,703,922,1108,1190],[217,302,703,921,1107,1189],[218,303,703,921,1106,1187],[219,304,702,921,1105,1186],[219,304,702,920,1104,1185],[220,305,702,920,1103,1183],[221,305,702,919,1102,1182],[222,306,701,919,1101,1180],[223,307,701,919,1099,1179],[224,307,701,918,1098,1178],[225,308,700,918,1097,1176],[226,309,700,917,1096,1175],[226,309,700,917,1095,1173],[227,310,700,916,1093,1172],[228,311,699,915,1092,1171],[229,311,699,915,1091,1169],[230,312,699,914,1090,1168],[231,312,698,914,1088,1166],[231,313,698,913,1087,1165],[232,314,698,912,1086,1163],[233,314,697,912,1084,1162],[234,315,697,911,1083,1160],[235,316,697,910,1082,1159],[235,316,696,910,1081,1157],[236,317,696,909,1079,1156],[237,317,696,908,1078,1154],[238,318,695,908,1077,1153],[238,319,695,907,1075,1152],[239,319,695,906,1074,1150],[240,320,694,905,1073,1149],[241,321,694,905,1071,1147],[241,321,694,904,1070,1146],[242,322,693,903,1069,1144],[243,322,693,902,1067,1143],[244,323,693,901,1066,1141],[244,324,692,901,1065,1140],[245,324,692,900,1063,1139],[246,325,691,899,1062,1137],[246,326,691,898,1060,1136],[247,326,691,897,1059,1134],[248,327,690,896,1058,1133],[249,328,690,896,1056,1132],[249,328,690,895,1055,1130],[250,329,689,894,1054,1129],[251,330,689,893,1053,1127],[252,330,689,892,1052,1126],[252,331,688,891,1050,1125],[253,332,688,890,1049,1123],[253,332,688,889,1047,1122],[254,333,687,889,1046,1121],[255,334,687,888,1045,1120],[255,334,687,887,1043,1118],[256,335,687,886,1042,1117],[257,336,686,885,1041,1116],[257,336,686,884,1040,1115],[258,337,686,883,1038,1113],[259,338,685,882,1037,1112],[259,338,685,882,1036,1111],[260,339,685,881,1035,1110],[261,340,685,880,1034,1109],[261,340,684,879,1033,1108],[262,341,684,878,1031,1106],[263,342,684,877,1030,1105],[263,343,684,877,1029,1104],[264,343,684,876,1028,1103],[265,344,683,875,1027,1102],[265,345,683,874,1026,1101],[266,346,683,873,1025,1100],[267,346,683,872,1024,1099],[268,347,683,872,1023,1098],[268,348,683,871,1022,1097],[269,349,683,870,1021,1096],[270,349,683,869,1020,1095],[270,350,682,869,1019,1095],[271,351,682,868,1018,1094],[272,352,682,867,1017,1093],[272,353,682,867,1016,1092],[273,353,682,866,1015,1091],[274,354,682,865,1014,1091],[274,355,682,865,1013,1090],[275,356,682,864,1013,1089],[276,357,682,863,1012,1089],[277,357,682,863,1011,1088],[277,358,682,862,1010,1087],[278,359,682,862,1010,1087],[279,360,682,861,1009,1086],[279,361,683,861,1008,1086],[280,362,683,860,1008,1085],[281,362,683,860,1007,1085],[282,363,683,859,1007,1084],[282,364,683,859,1006,1084],[283,365,683,859,1005,1083],[284,366,683,858,1005,1083],[285,367,684,858,1005,1083],[285,367,684,857,1004,1082],[286,368,684,857,1004,1082],[287,369,684,857,1003,1082],[287,370,684,857,1003,1081],[288,371,685,856,1003,1081],[289,372,685,856,1002,1081],[290,372,685,856,1002,1081],[290,373,686,856,1002,1081],[291,374,686,856,1002,1081],[292,375,686,856,1001,1081],[292,376,687,856,1001,1081],[293,377,687,856,1001,1081],[294,377,687,856,1001,1081],[295,378,688,856,1001,1081],[295,379,688,856,1001,1081],[296,380,688,856,1001,1081],[297,380,689,856,1001,1081],[297,381,689,856,1001,1081],[298,382,690,856,1001,1081],[299,383,690,856,1001,1081],[299,383,690,856,1001,1082],[300,384,691,857,1002,1082],[301,385,691,857,1002,1082],[301,386,692,857,1002,1082],[302,386,692,857,1002,1083],[303,387,693,858,1003,1083],[303,388,693,858,1003,1083],[304,388,694,858,1003,1084],[304,389,694,859,1004,1084],[305,389,695,859,1004,1084],[305,390,695,859,1004,1085],[306,390,696,860,1005,1085],[306,391,696,860,1005,1086],[307,392,697,861,1006,1086],[307,392,697,861,1006,1087],[308,392,698,862,1007,1087],[308,393,698,862,1007,1088],[309,393,699,863,1008,1088],[309,394,699,864,1008,1089],[310,394,700,864,1009,1090],[310,394,700,865,1010,1090],[310,395,701,865,1010,1091],[311,395,701,866,1011,1091],[311,395,702,867,1012,1092]];
+const CITIES=[
+ [0,"Asia/Jerusalem","Jerusalem","القدس"],[0,"Asia/Hebron","Ramallah","رام الله"],[0,"Asia/Hebron","Bethlehem","بيت لحم"],[0,"Asia/Hebron","Jenin","جنين"],[0,"Asia/Hebron","Nablus","نابلس"],[0,"Asia/Jerusalem","Nazareth","الناصرة"],[0,"Asia/Jerusalem","Umm al-Fahm","أم الفحم"],
+ [-60,"Asia/Hebron","Jericho","أريحا"],[-60,"Asia/Jerusalem","Tiberias","طبريا"],[-60,"Asia/Jerusalem","Safad","صفد"],[-60,"Asia/Jerusalem","Beisan","بيسان"],
+ [60,"Asia/Hebron","Hebron","الخليل"],[60,"Asia/Hebron","Idhna","إذنا"],[60,"Asia/Hebron","Dura","دورا"],[60,"Asia/Hebron","Beit Awwa","بيت عوا"],[60,"Asia/Jerusalem","Haifa","حيفا"],[60,"Asia/Jerusalem","Acre","عكا"],[60,"Asia/Hebron","Tulkarm","طولكرم"],[60,"Asia/Jerusalem","Kafr Qasim","كفر قاسم"],[60,"Asia/Jerusalem","Tayibe","الطيبة"],
+ [90,"Asia/Jerusalem","Lydd","اللد"],[90,"Asia/Jerusalem","Ramla","الرملة"],[90,"Asia/Hebron","Qalqilya","قلقيلية"],
+ [120,"Asia/Jerusalem","Beersheba","بئر السبع"],[120,"Asia/Jerusalem","Jaffa","يافا"],
+ [180,"Asia/Gaza","Gaza","غزة"],
+ [240,"Asia/Gaza","Rafah","رفح"],[240,"Asia/Gaza","Khan Younis","خان يونس"],[240,"Asia/Gaza","Deir al-Balah","دير البلح"]
+];
+const P=[["Fajr","الفجر"],["Sunrise","الشروق"],["Dhuhr","الظهر"],["Asr","العصر"],["Maghrib","المغرب"],["Isha","العشاء"]];
+const MON={en:["January","February","March","April","May","June","July","August","September","October","November","December"],ar:["كانون الثاني","شباط","آذار","نيسان","أيار","حزيران","تموز","آب","أيلول","تشرين الأول","تشرين الثاني","كانون الأول"]};
+const GROUPS={en:{0:"Same as Al-Aqsa","-60":"1 minute earlier",60:"1 minute later",90:"1½ minutes later",120:"2 minutes later",180:"3 minutes later",240:"4 minutes later"},ar:{0:"بلا فارق زمني","-60":"قبل القدس بدقيقة",60:"بعد القدس بدقيقة",90:"بعد القدس بدقيقة ونصف",120:"بعد القدس بدقيقتين",180:"بعد القدس بثلاث دقائق",240:"بعد القدس بأربع دقائق"}};
+const TX={
+ en:{name:"Al-Aqsa Prayer Times",sub:"Perpetual timetable of the Palestinian Dar al-Ifta",city:"City",next:"Next",sunNext:"Next",inL:"Starts in",sunIn:"Fajr ends in",tomorrow:"tomorrow",nextChip:"Next",nowChip:"Now",eid:"Eid prayer begins, if this date is Eid",today:"Back to today",month:"Full month",day:"Day",summer:"Summer time: 1 hour added",winter:"Winter time",prev:"Previous day",nextD:"Next day",pm:"Previous month",nm:"Next month",fmt:"Time format",
+  shiftOn:"Summer time starts. Times below include 1 added hour.",shiftOff:"Winter time starts. Times below return to the printed table.",
+  hNotes:[["Source","<p>Times come from توقيت الصلاة الدهري, the perpetual timetable issued by the Palestinian Dar al-Ifta (Jerusalem, 1433 AH / 2012), set for Al-Aqsa Mosque. It covers all 366 days and repeats every year.</p><p>The printed table is in winter time. This app adds one hour on dates when the selected city is on summer time, using your browser's time zone database. West Bank, Gaza and Jerusalem-area cities can change clocks on different dates.</p><p>The Hijri date is calculated with the Umm al-Qura calendar and can differ by a day from the date announced locally.</p>"],["City differences","<p>The booklet sets these differences from Jerusalem. The 1½-minute cities are rounded so that prayers show the later minute and sunrise shows the earlier one.</p><dl id=\"dl\"></dl>"]]},
+ ar:{name:"توقيت الصلاة الدهري",sub:"حسب توقيت المسجد الأقصى المبارك، دار الإفتاء الفلسطينية",city:"المدينة",next:"الصلاة القادمة",sunNext:"القادم",inL:"يبدأ وقتها بعد",sunIn:"ينتهي وقت الفجر بعد",tomorrow:"غداً",nextChip:"القادمة",nowChip:"الآن",eid:"بدء صلاة العيد، إذا وافق هذا اليوم العيد",today:"العودة إلى اليوم",month:"الشهر كاملاً",day:"اليوم",summer:"التوقيت الصيفي: أضيفت ساعة",winter:"التوقيت الشتوي",prev:"اليوم السابق",nextD:"اليوم التالي",pm:"الشهر السابق",nm:"الشهر التالي",fmt:"صيغة الوقت",
+  shiftOn:"يبدأ التوقيت الصيفي. الأوقات أدناه تشمل ساعة مضافة.",shiftOff:"يبدأ التوقيت الشتوي. الأوقات أدناه تعود إلى الجدول المطبوع.",
+  hNotes:[["المصدر","<p>الأوقات مأخوذة من «توقيت الصلاة الدهري» الصادر عن دار الإفتاء الفلسطينية (القدس، 1433هـ - 2012م) حسب توقيت المسجد الأقصى المبارك، ويغطي 366 يوماً ويتكرر كل عام.</p><p>الجدول المطبوع بالتوقيت الشتوي. يضيف التطبيق ساعة في الأيام التي تكون فيها المدينة المختارة على التوقيت الصيفي، بالاعتماد على بيانات المناطق الزمنية في المتصفح. وقد يختلف موعد تغيير الساعة بين الضفة وغزة ومنطقة القدس.</p><p>التاريخ الهجري محسوب وفق تقويم أم القرى، وقد يختلف بيوم عن التاريخ المعلن محلياً.</p>"],["فروق التوقيت","<p>هذه الفروق عن القدس كما وردت في التوقيت الدهري. في مدن الدقيقة والنصف تُقرَّب الصلوات إلى الدقيقة اللاحقة والشروق إلى الدقيقة السابقة.</p><dl id=\"dl\"></dl>"]]}
+};
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const $=id=>document.getElementById(id);
+const S={lang:store.get("lang")==="ar"?"ar":"en",h24:store.get("h24")==="1",city:Math.max(0,CITIES.findIndex(c=>c[2]===(store.get("city")||"Ramallah"))),sel:null,mon:null,lastKey:""};
+
+function offset(zone,ms){
+  const o={};new Intl.DateTimeFormat("en-US",{timeZone:zone,hourCycle:"h23",year:"numeric",month:"numeric",day:"numeric",hour:"numeric",minute:"numeric",second:"numeric"}).formatToParts(new Date(ms)).forEach(p=>o[p.type]=p.value);
+  return Math.round((Date.UTC(+o.year,o.month-1,+o.day,+o.hour,+o.minute,+o.second)-ms)/60000);
+}
+const ymd=(y,m,d)=>{const t=new Date(Date.UTC(y,m-1,d));return{y:t.getUTCFullYear(),m:t.getUTCMonth()+1,d:t.getUTCDate()}};
+const add=(a,n)=>ymd(a.y,a.m,a.d+n);
+const same=(a,b)=>a&&b&&a.y===b.y&&a.m===b.m&&a.d===b.d;
+const idx=(m,d)=>{const L=[31,29,31,30,31,30,31,31,30,31,30,31];let n=d-1;for(let i=0;i<m-1;i++)n+=L[i];return n};
+function zoneOff(c,a){return offset(c[1],Date.UTC(a.y,a.m-1,a.d,10))}
+function nowIn(c){
+  const ms=Date.now(),t=new Date(ms+offset(c[1],ms)*60000);
+  return{ms,date:{y:t.getUTCFullYear(),m:t.getUTCMonth()+1,d:t.getUTCDate()},h:t.getUTCHours(),min:t.getUTCMinutes()};
+}
+/* City difference is held in seconds. Prayers round up, sunrise rounds down, so neither reads as earlier or later than is safe. */
+function times(c,a){
+  const off=zoneOff(c,a),dst=off-120,base=T[idx(a.m,a.d)],sec=c[0];
+  const wall=base.map((v,i)=>{const s=v*60+sec;return (i===1?Math.floor(s/60):Math.ceil(s/60))+dst});
+  const sunExact=base[1]*60+sec;
+  return{wall,off,dst,eid:Math.ceil(sunExact/60)+35+dst,epoch:wall.map(w=>Date.UTC(a.y,a.m-1,a.d)+(w-off)*60000)};
+}
+function fmt(w){
+  w=((w%1440)+1440)%1440;const h=Math.floor(w/60),m=String(w%60).padStart(2,"0");
+  if(S.h24)return `${String(h).padStart(2,"0")}:${m}`;
+  const ap=S.lang==="ar"?(h<12?"ص":"م"):(h<12?"AM":"PM");
+  return `${h%12||12}:${m} ${ap}`;
+}
+const loc=()=>S.lang==="ar"?"ar-u-nu-latn":"en-GB";
+function weekday(a,style){return new Intl.DateTimeFormat(loc(),{weekday:style,timeZone:"UTC"}).format(Date.UTC(a.y,a.m-1,a.d))}
+function hijri(a){try{return new Intl.DateTimeFormat(S.lang==="ar"?"ar-u-ca-islamic-umalqura-nu-latn":"en-u-ca-islamic-umalqura",{day:"numeric",month:"long",year:"numeric",timeZone:"UTC"}).format(Date.UTC(a.y,a.m-1,a.d))}catch(e){return ""}}
+const pn=(i,l)=>P[i][(l||S.lang)==="ar"?1:0];
+const cn=c=>S.lang==="ar"?c[3]:c[2];
+
+function nextEvent(c,n){
+  for(const a of [n.date,add(n.date,1)]){
+    const t=times(c,a);
+    for(let i=0;i<6;i++)if(t.epoch[i]>n.ms)return{i,a,t,tomorrow:a!==n.date};
+  }
+}
+function renderHero(){
+  const c=CITIES[S.city],n=nowIn(c),e=nextEvent(c,n),L=TX[S.lang];
+  const t0=times(c,n.date);
+  $("hWhere").textContent=`${cn(c)} · ${t0.dst?L.summer:L.winter}`;
+  $("hNow").textContent=fmt(n.h*60+n.min);$("hNow").setAttribute("dir","ltr");
+  $("hLabel").textContent=e.i===1?L.sunNext:L.next;
+  $("nextName").textContent=pn(e.i);
+  $("nextAt").textContent=fmt(e.t.wall[e.i])+(e.tomorrow?` · ${L.tomorrow}`:"");
+  $("hIn").textContent=e.i===1?L.sunIn:L.inL;
+  const s=Math.max(0,Math.ceil((e.t.epoch[e.i]-n.ms)/1000));
+  $("count").textContent=[Math.floor(s/3600),Math.floor(s/60)%60,s%60].map(v=>String(v).padStart(2,"0")).join(":");
+  
+  return{n,e};
+}
+function renderDay(st){
+  const c=CITIES[S.city],L=TX[S.lang],a=S.sel,t=times(c,a),isToday=same(a,st.n.date);
+  $("dG").textContent=`${weekday(a,"long")}${S.lang==="ar"?"،":","} ${a.d} ${MON[S.lang][a.m-1]} ${a.y}`;
+  $("dH").textContent=hijri(a);
+  $("back").hidden=isToday;$("back").textContent=L.today;
+  let cur=-1,nx=-1;
+  if(isToday){for(let i=0;i<6;i++)if(t.epoch[i]<=st.n.ms)cur=i;nx=same(st.e.a,a)?st.e.i:-1}
+  $("rows").innerHTML=t.wall.map((w,i)=>{
+    const cls=[i===1?"soft":"",isToday&&i<cur?"past":"",i===nx?"next":"",i===cur&&i!==1?"cur":""].join(" ");
+    const chip=i===nx?`<span class="chip">${L.nextChip}</span>`:(i===cur&&i!==1?`<span class="chip">${L.nowChip}</span>`:"");
+    return `<li class="${cls}"><span class="nm">${pn(i)}<span class="alt" lang="${S.lang==="ar"?"en":"ar"}">${pn(i,S.lang==="ar"?"en":"ar")}</span></span>${chip}<bdi class="tm num">${fmt(w)}</bdi></li>`;
+  }).join("");
+  $("eidL").textContent=L.eid;$("eidV").textContent=fmt(t.eid);
+  const b=$("band"),start=Math.floor((t.wall[0]-60)/60)*60,end=Math.ceil((t.wall[5]+60)/60)*60,pc=w=>((w-start)/(end-start)*100).toFixed(2)+"%";
+  let h=`<div class="track"><div class="daylight" style="inset-inline-start:${pc(t.wall[1])};width:${((t.wall[4]-t.wall[1])/(end-start)*100).toFixed(2)}%"></div></div>`;
+  t.wall.forEach((w,i)=>{h+=`<div class="mk" style="inset-inline-start:${pc(w)}"></div><div class="lb ${i%2?"b":"a"} ${i===0?"first":i===5?"last":""}" style="inset-inline-start:${pc(w)}"><b>${pn(i)}</b><i class="num"><bdi>${fmt(w)}</bdi></i></div>`});
+  if(isToday){const nw=st.n.h*60+st.n.min;if(nw>=start&&nw<=end)h+=`<div class="nowmk" style="inset-inline-start:${pc(nw)}"></div>`}
+  b.innerHTML=h;
+}
+function renderMonth(st){
+  const c=CITIES[S.city],L=TX[S.lang],{y,m}=S.mon,days=new Date(Date.UTC(y,m,0)).getUTCDate();
+  $("mTitle").textContent=L.month;$("mLabel").textContent=`${MON[S.lang][m-1]} ${y}`;
+  $("mHead").innerHTML=`<tr><th scope="col">${L.day}</th>${P.map((_,i)=>`<th scope="col">${pn(i)}</th>`).join("")}</tr>`;
+  let out="",prev=times(c,add({y,m,d:1},-1)).dst;
+  for(let d=1;d<=days;d++){
+    const a={y,m,d},t=times(c,a);
+    if(t.dst!==prev){out+=`<tr class="shift"><td colspan="7">${t.dst?L.shiftOn:L.shiftOff}</td></tr>`;prev=t.dst}
+    const cls=same(a,st.n.date)?"today":same(a,S.sel)?"sel":"";
+    out+=`<tr class="${cls}"><td><button class="dbtn" type="button" data-d="${d}"><b>${d}</b><span>${weekday(a,"short")}</span></button></td>${t.wall.map((w,i)=>`<td class="${i===1&&cls!=="today"?"soft":""}"><bdi>${fmt(w).replace(/ (.+)$/,'<span class="ap"> $1</span>')}</bdi></td>`).join("")}</tr>`;
+  }
+  $("mBody").innerHTML=out;
+}
+function renderChrome(){
+  const L=TX[S.lang],r=document.documentElement;
+  r.lang=S.lang;r.dir=S.lang==="ar"?"rtl":"ltr";
+  $("tName").textContent=L.name;$("tSub").textContent=L.sub;$("tCity").textContent=L.city;
+  document.title="Al-Aqsa Prayer Times";
+  $("f12").setAttribute("aria-pressed",!S.h24);$("f24").setAttribute("aria-pressed",S.h24);
+  $("fmtSeg").setAttribute("aria-label",L.fmt);
+  $("lEn").setAttribute("aria-pressed",S.lang==="en");$("lAr").setAttribute("aria-pressed",S.lang==="ar");
+  $("prev").setAttribute("aria-label",L.prev);$("next").setAttribute("aria-label",L.nextD);
+  $("mPrev").setAttribute("aria-label",L.pm);$("mNext").setAttribute("aria-label",L.nm);
+  $("tw").setAttribute("aria-label",L.month);
+  const g=GROUPS[S.lang],order=[0,-60,60,90,120,180,240];
+  $("city").innerHTML=order.map(o=>`<optgroup label="${g[o]}">${CITIES.map((c,i)=>c[0]===o?`<option value="${i}" ${i===S.city?"selected":""}>${cn(c)}</option>`:"").join("")}</optgroup>`).join("");
+  $("notes").innerHTML=L.hNotes.map(n=>`<div><h3>${n[0]}</h3>${n[1]}</div>`).join("");
+  $("dl").innerHTML=order.map(o=>`<dt>${g[o]}</dt><dd>${CITIES.filter(c=>c[0]===o).map(cn).join(S.lang==="ar"?"، ":", ")}</dd>`).join("");
+}
+function full(){renderChrome();tick(true)}
+function tick(force){
+  const st=renderHero(),k=[st.n.date.y,st.n.date.m,st.n.date.d,st.n.h,st.n.min,S.city,S.lang,S.h24,S.sel&&S.sel.d,S.sel&&S.sel.m,S.sel&&S.sel.y,S.mon&&S.mon.m,S.mon&&S.mon.y,st.e.i].join();
+  if(!S.sel){S.sel=st.n.date;S.mon={y:st.n.date.y,m:st.n.date.m}}
+  if(force||k!==S.lastKey){renderDay(st);renderMonth(st);S.lastKey=k}
+}
+function select(a){S.sel=a;S.mon={y:a.y,m:a.m};tick(true)}
+$("prev").onclick=()=>select(add(S.sel,-1));
+$("next").onclick=()=>select(add(S.sel,1));
+$("back").onclick=()=>select(nowIn(CITIES[S.city]).date);
+$("mPrev").onclick=()=>{const a=ymd(S.mon.y,S.mon.m-1,1);S.mon={y:a.y,m:a.m};tick(true)};
+$("mNext").onclick=()=>{const a=ymd(S.mon.y,S.mon.m+1,1);S.mon={y:a.y,m:a.m};tick(true)};
+$("mBody").onclick=e=>{const b=e.target.closest("[data-d]");if(b){S.sel={y:S.mon.y,m:S.mon.m,d:+b.dataset.d};tick(true);$("app").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"})}};
+$("city").onchange=e=>{S.city=+e.target.value;store.set("city",CITIES[S.city][2]);tick(true)};
+$("f12").onclick=()=>{S.h24=false;store.set("h24","0");full()};
+$("f24").onclick=()=>{S.h24=true;store.set("h24","1");full()};
+$("lEn").onclick=()=>{S.lang="en";store.set("lang","en");full()};
+$("lAr").onclick=()=>{S.lang="ar";store.set("lang","ar");full()};
+full();
+setInterval(()=>tick(false),1000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)tick(true)});
+</script>
+
+</body>
+</html>
