@@ -109,6 +109,13 @@ tr.today td{background:var(--burgundy);color:var(--on-b);border-color:var(--burg
 tr.today .dbtn span{color:var(--on-b-muted)}
 tr.shift td{color:var(--rose);font-size:var(--s-sm);text-align:start;height:36px}
 
+.legend{margin:0;color:var(--muted);font-size:var(--s-sm);display:flex;gap:10px;align-items:center}
+.legend i{width:4px;height:18px;background:var(--rose);border-radius:2px;flex:none}
+tr.ram td:first-child{box-shadow:inset calc(4px * var(--s)) 0 0 var(--rose)}
+tr.eidrow td{color:var(--rose)}
+.dbtn span.ds{color:var(--fg)}
+th .sub{display:block;font-weight:400;font-size:.75rem}
+.ramchip{display:inline-block;margin-inline-start:8px;padding:1px 8px;border-radius:99px;background:var(--burgundy);color:var(--on-b);font-size:var(--s-xs);vertical-align:middle}
 .notes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 32px;padding-top:12px;border-top:1px solid var(--line)}
 .notes h3{margin:0 0 6px;font-size:var(--s-md);font-weight:600}
 .notes p{margin:0 0 8px;color:var(--muted);font-size:var(--s-sm);max-width:62ch}
@@ -126,7 +133,8 @@ tr.shift td{color:var(--rose);font-size:var(--s-sm);text-align:start;height:36px
   thead th{font-size:.75rem}
   th:first-child,td:first-child{padding-inline-start:10px}
   th:last-child,td:last-child{padding-inline-end:10px}
-  .ap,.dbtn span{display:none}
+  .ap,.dbtn span,.opt{display:none}
+  .dbtn span.ds{display:inline}
   .lb i{display:none}
   .band{height:92px}
 }
@@ -174,12 +182,14 @@ tr.shift td{color:var(--rose);font-size:var(--s-sm);text-align:start;height:36px
   <section aria-labelledby="mTitle" style="display:grid;gap:12px">
     <div class="tabs">
       <h3 id="mTitle"></h3>
+      <div class="seg" role="group" id="viewSeg"><button id="vMonth" type="button"></button><button id="vRam" type="button"></button></div>
       <div class="mnav">
         <button class="icon" id="mPrev" type="button"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M11 3 5 9l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
         <div class="title num" id="mLabel"></div>
         <button class="icon" id="mNext" type="button"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="m7 3 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </div>
     </div>
+    <p class="legend" id="legend" hidden><i></i><span id="legendT"></span></p>
     <div class="tw" tabindex="0" id="tw"><table class="num"><thead id="mHead"></thead><tbody id="mBody"></tbody></table></div>
   </section>
 
@@ -201,16 +211,16 @@ const P=[["Fajr","الفجر"],["Sunrise","الشروق"],["Dhuhr","الظهر"]
 const MON={en:["January","February","March","April","May","June","July","August","September","October","November","December"],ar:["كانون الثاني","شباط","آذار","نيسان","أيار","حزيران","تموز","آب","أيلول","تشرين الأول","تشرين الثاني","كانون الأول"]};
 const GROUPS={en:{0:"Same as Al-Aqsa","-60":"1 minute earlier",60:"1 minute later",90:"1½ minutes later",120:"2 minutes later",180:"3 minutes later",240:"4 minutes later"},ar:{0:"بلا فارق زمني","-60":"قبل القدس بدقيقة",60:"بعد القدس بدقيقة",90:"بعد القدس بدقيقة ونصف",120:"بعد القدس بدقيقتين",180:"بعد القدس بثلاث دقائق",240:"بعد القدس بأربع دقائق"}};
 const TX={
- en:{name:"Al-Aqsa Prayer Times",sub:"Perpetual timetable of the Palestinian Dar al-Ifta",city:"City",next:"Next",sunNext:"Next",inL:"Starts in",sunIn:"Fajr ends in",tomorrow:"tomorrow",nextChip:"Next",nowChip:"Now",eid:"Eid prayer begins, if this date is Eid",today:"Back to today",month:"Full month",day:"Day",summer:"Summer time: 1 hour added",winter:"Winter time",prev:"Previous day",nextD:"Next day",pm:"Previous month",nm:"Next month",fmt:"Time format",
+ en:{name:"Al-Aqsa Prayer Times",sub:"Perpetual timetable of the Palestinian Dar al-Ifta",city:"City",next:"Next",sunNext:"Next",inL:"Starts in",sunIn:"Fajr ends in",tomorrow:"tomorrow",nextChip:"Next",nowChip:"Now",eid:"Eid prayer begins, if this date is Eid",today:"Back to today",month:"Full month",day:"Day",summer:"Summer time: 1 hour added",winter:"Winter time",prev:"Previous day",nextD:"Next day",pm:"Previous month",nm:"Next month",fmt:"Time format",vMonth:"Month",vRam:"Ramadan",ramTitle:"Ramadan",ah:"AH",ramDay:"Ramadan",imsak:"Imsak",imsakAlt:"10 min before Fajr",iftar:"Iftar",suhoor:"Suhoor ends",iftarIn:"Iftar in",eidF:"Eid al-Fitr prayer (expected)",eidA:"Eid al-Adha prayer (expected)",eidFrow:"Eid al-Fitr (expected)",legMonth:"Marked days fall in Ramadan (expected dates).",legRam:"Expected dates. Ramadan begins and ends on the moon sighting announced by Dar al-Ifta. Imsak is set 10 minutes before Fajr.",
   shiftOn:"Summer time starts. Times below include 1 added hour.",shiftOff:"Winter time starts. Times below return to the printed table.",
-  hNotes:[["Source","<p>Times come from توقيت الصلاة الدهري, the perpetual timetable issued by the Palestinian Dar al-Ifta (Jerusalem, 1433 AH / 2012), set for Al-Aqsa Mosque. It covers all 366 days and repeats every year.</p><p>The printed table is in winter time. This app adds one hour on dates when the selected city is on summer time, using your browser's time zone database. West Bank, Gaza and Jerusalem-area cities can change clocks on different dates.</p><p>The Hijri date is calculated with the Umm al-Qura calendar and can differ by a day from the date announced locally.</p>"],["City differences","<p>The booklet sets these differences from Jerusalem. The 1½-minute cities are rounded so that prayers show the later minute and sunrise shows the earlier one.</p><dl id=\"dl\"></dl>"]]},
- ar:{name:"توقيت الصلاة الدهري",sub:"حسب توقيت المسجد الأقصى المبارك، دار الإفتاء الفلسطينية",city:"المدينة",next:"الصلاة القادمة",sunNext:"القادم",inL:"يبدأ وقتها بعد",sunIn:"ينتهي وقت الفجر بعد",tomorrow:"غداً",nextChip:"القادمة",nowChip:"الآن",eid:"بدء صلاة العيد، إذا وافق هذا اليوم العيد",today:"العودة إلى اليوم",month:"الشهر كاملاً",day:"اليوم",summer:"التوقيت الصيفي: أضيفت ساعة",winter:"التوقيت الشتوي",prev:"اليوم السابق",nextD:"اليوم التالي",pm:"الشهر السابق",nm:"الشهر التالي",fmt:"صيغة الوقت",
+  hNotes:[["Source","<p>Times come from توقيت الصلاة الدهري, the perpetual timetable issued by the Palestinian Dar al-Ifta (Jerusalem, 1433 AH / 2012), set for Al-Aqsa Mosque. It covers all 366 days and repeats every year.</p><p>The printed table is in winter time. This app adds one hour on dates when the selected city is on summer time, using your browser's time zone database. West Bank, Gaza and Jerusalem-area cities can change clocks on different dates.</p><p>The Hijri date is calculated with the Umm al-Qura calendar and can differ by a day from the date announced locally.</p><p>Ramadan and Eid dates use the same calendar, so they are expected dates only. The booklet does not list Imsak; the app shows it 10 minutes before Fajr, the common local convention.</p>"],["City differences","<p>The booklet sets these differences from Jerusalem. The 1½-minute cities are rounded so that prayers show the later minute and sunrise shows the earlier one.</p><dl id=\"dl\"></dl>"]]},
+ ar:{name:"توقيت الصلاة الدهري",sub:"حسب توقيت المسجد الأقصى المبارك، دار الإفتاء الفلسطينية",city:"المدينة",next:"الصلاة القادمة",sunNext:"القادم",inL:"يبدأ وقتها بعد",sunIn:"ينتهي وقت الفجر بعد",tomorrow:"غداً",nextChip:"القادمة",nowChip:"الآن",eid:"بدء صلاة العيد، إذا وافق هذا اليوم العيد",today:"العودة إلى اليوم",month:"الشهر كاملاً",day:"اليوم",summer:"التوقيت الصيفي: أضيفت ساعة",winter:"التوقيت الشتوي",prev:"اليوم السابق",nextD:"اليوم التالي",pm:"الشهر السابق",nm:"الشهر التالي",fmt:"صيغة الوقت",vMonth:"الشهر",vRam:"رمضان",ramTitle:"إمساكية رمضان",ah:"هـ",ramDay:"رمضان",imsak:"الإمساك",imsakAlt:"قبل الفجر بعشر دقائق",iftar:"الإفطار",suhoor:"نهاية السحور",iftarIn:"الإفطار بعد",eidF:"صلاة عيد الفطر (متوقع)",eidA:"صلاة عيد الأضحى (متوقع)",eidFrow:"عيد الفطر (متوقع)",legMonth:"الأيام المعلَّمة من شهر رمضان (تواريخ متوقعة).",legRam:"تواريخ متوقعة؛ يبدأ رمضان وينتهي بإعلان دار الإفتاء رؤية الهلال. الإمساك قبل الفجر بعشر دقائق.",
   shiftOn:"يبدأ التوقيت الصيفي. الأوقات أدناه تشمل ساعة مضافة.",shiftOff:"يبدأ التوقيت الشتوي. الأوقات أدناه تعود إلى الجدول المطبوع.",
-  hNotes:[["المصدر","<p>الأوقات مأخوذة من «توقيت الصلاة الدهري» الصادر عن دار الإفتاء الفلسطينية (القدس، 1433هـ - 2012م) حسب توقيت المسجد الأقصى المبارك، ويغطي 366 يوماً ويتكرر كل عام.</p><p>الجدول المطبوع بالتوقيت الشتوي. يضيف التطبيق ساعة في الأيام التي تكون فيها المدينة المختارة على التوقيت الصيفي، بالاعتماد على بيانات المناطق الزمنية في المتصفح. وقد يختلف موعد تغيير الساعة بين الضفة وغزة ومنطقة القدس.</p><p>التاريخ الهجري محسوب وفق تقويم أم القرى، وقد يختلف بيوم عن التاريخ المعلن محلياً.</p>"],["فروق التوقيت","<p>هذه الفروق عن القدس كما وردت في التوقيت الدهري. في مدن الدقيقة والنصف تُقرَّب الصلوات إلى الدقيقة اللاحقة والشروق إلى الدقيقة السابقة.</p><dl id=\"dl\"></dl>"]]}
+  hNotes:[["المصدر","<p>الأوقات مأخوذة من «توقيت الصلاة الدهري» الصادر عن دار الإفتاء الفلسطينية (القدس، 1433هـ - 2012م) حسب توقيت المسجد الأقصى المبارك، ويغطي 366 يوماً ويتكرر كل عام.</p><p>الجدول المطبوع بالتوقيت الشتوي. يضيف التطبيق ساعة في الأيام التي تكون فيها المدينة المختارة على التوقيت الصيفي، بالاعتماد على بيانات المناطق الزمنية في المتصفح. وقد يختلف موعد تغيير الساعة بين الضفة وغزة ومنطقة القدس.</p><p>التاريخ الهجري محسوب وفق تقويم أم القرى، وقد يختلف بيوم عن التاريخ المعلن محلياً.</p><p>تواريخ رمضان والعيدين محسوبة بالتقويم نفسه فهي متوقعة فقط. لا يتضمن التوقيت الدهري وقت الإمساك؛ يعرضه التطبيق قبل الفجر بعشر دقائق وفق العُرف المحلي الشائع.</p>"],["فروق التوقيت","<p>هذه الفروق عن القدس كما وردت في التوقيت الدهري. في مدن الدقيقة والنصف تُقرَّب الصلوات إلى الدقيقة اللاحقة والشروق إلى الدقيقة السابقة.</p><dl id=\"dl\"></dl>"]]}
 };
 const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 const $=id=>document.getElementById(id);
-const S={lang:store.get("lang")==="ar"?"ar":"en",h24:store.get("h24")==="1",city:Math.max(0,CITIES.findIndex(c=>c[2]===(store.get("city")||"Ramallah"))),sel:null,mon:null,lastKey:""};
+const S={lang:store.get("lang")==="ar"?"ar":"en",h24:store.get("h24")==="1",city:Math.max(0,CITIES.findIndex(c=>c[2]===(store.get("city")||"Ramallah"))),sel:null,mon:null,lastKey:"",view:location.hash==="#ramadan"?"ram":"month",ramY:null};
 
 function offset(zone,ms){
   const o={};new Intl.DateTimeFormat("en-US",{timeZone:zone,hourCycle:"h23",year:"numeric",month:"numeric",day:"numeric",hour:"numeric",minute:"numeric",second:"numeric"}).formatToParts(new Date(ms)).forEach(p=>o[p.type]=p.value);
@@ -240,6 +250,10 @@ function fmt(w){
 }
 const loc=()=>S.lang==="ar"?"ar-u-nu-latn":"en-GB";
 function weekday(a,style){return new Intl.DateTimeFormat(loc(),{weekday:style,timeZone:"UTC"}).format(Date.UTC(a.y,a.m-1,a.d))}
+const HC={};let HOK=false;try{HOK=new Intl.DateTimeFormat("en-u-ca-islamic-umalqura",{timeZone:"UTC"}).resolvedOptions().calendar==="islamic-umalqura"}catch(e){}
+function hp(a){const k=a.y*500+a.m*40+a.d;if(HC[k])return HC[k];let r={y:0,m:0,d:0};if(HOK){const o={};new Intl.DateTimeFormat("en-u-ca-islamic-umalqura-nu-latn",{day:"numeric",month:"numeric",year:"numeric",timeZone:"UTC"}).formatToParts(Date.UTC(a.y,a.m-1,a.d)).forEach(p=>o[p.type]=p.value);r={y:parseInt(o.year),m:+o.month,d:+o.day}}return HC[k]=r}
+function ramadan(hy){let a=ymd(2027,2,8+Math.round((hy-1448)*354.367)-25);for(let i=0;i<50;i++,a=add(a,1)){const h=hp(a);if(h.y===hy&&h.m===9&&h.d===1)break}const out=[];while(hp(a).m===9&&out.length<31){out.push(a);a=add(a,1)}return out}
+function curRamYear(d){const h=hp(d);return h.m>9?h.y+1:h.y}
 function hijri(a){try{return new Intl.DateTimeFormat(S.lang==="ar"?"ar-u-ca-islamic-umalqura-nu-latn":"en-u-ca-islamic-umalqura",{day:"numeric",month:"long",year:"numeric",timeZone:"UTC"}).format(Date.UTC(a.y,a.m-1,a.d))}catch(e){return ""}}
 const pn=(i,l)=>P[i][(l||S.lang)==="ar"?1:0];
 const cn=c=>S.lang==="ar"?c[3]:c[2];
@@ -259,6 +273,9 @@ function renderHero(){
   $("nextName").textContent=pn(e.i);
   $("nextAt").textContent=fmt(e.t.wall[e.i])+(e.tomorrow?` · ${L.tomorrow}`:"");
   $("hIn").textContent=e.i===1?L.sunIn:L.inL;
+  const RMn=hp(e.a).m===9;
+  if(RMn&&e.i===4){$("hLabel").textContent=L.next;$("nextName").textContent=L.iftar;$("nextAt").textContent=`${pn(4)} · ${fmt(e.t.wall[4])}`+(e.tomorrow?` · ${L.tomorrow}`:"");$("hIn").textContent=L.iftarIn}
+  if(RMn&&e.i===0)$("nextAt").textContent+=` · ${L.imsak} ${fmt(e.t.wall[0]-10)}`;
   const s=Math.max(0,Math.ceil((e.t.epoch[e.i]-n.ms)/1000));
   $("count").textContent=[Math.floor(s/3600),Math.floor(s/60)%60,s%60].map(v=>String(v).padStart(2,"0")).join(":");
   
@@ -271,30 +288,50 @@ function renderDay(st){
   $("back").hidden=isToday;$("back").textContent=L.today;
   let cur=-1,nx=-1;
   if(isToday){for(let i=0;i<6;i++)if(t.epoch[i]<=st.n.ms)cur=i;nx=same(st.e.a,a)?st.e.i:-1}
-  $("rows").innerHTML=t.wall.map((w,i)=>{
+  const H=hp(a),RM=H.m===9;
+  $("dH").innerHTML=hijri(a)+(RM?`<span class="ramchip">${L.ramDay} ${H.d}</span>`:"");
+  $("rows").innerHTML=(RM?`<li class="soft"><span class="nm">${L.imsak}<span class="alt">${L.imsakAlt}</span></span><bdi class="tm num">${fmt(t.wall[0]-10)}</bdi></li>`:"")+t.wall.map((w,i)=>{
     const cls=[i===1?"soft":"",isToday&&i<cur?"past":"",i===nx?"next":"",i===cur&&i!==1?"cur":""].join(" ");
     const chip=i===nx?`<span class="chip">${L.nextChip}</span>`:(i===cur&&i!==1?`<span class="chip">${L.nowChip}</span>`:"");
-    return `<li class="${cls}"><span class="nm">${pn(i)}<span class="alt" lang="${S.lang==="ar"?"en":"ar"}">${pn(i,S.lang==="ar"?"en":"ar")}</span></span>${chip}<bdi class="tm num">${fmt(w)}</bdi></li>`;
+    return `<li class="${cls}"><span class="nm">${pn(i)}<span class="alt" lang="${RM&&(i===4||i===0)?S.lang:S.lang==="ar"?"en":"ar"}">${RM&&i===4?L.iftar:RM&&i===0?L.suhoor:pn(i,S.lang==="ar"?"en":"ar")}</span></span>${chip}<bdi class="tm num">${fmt(w)}</bdi></li>`;
   }).join("");
-  $("eidL").textContent=L.eid;$("eidV").textContent=fmt(t.eid);
+  $("eidL").textContent=H.m===10&&H.d===1?L.eidF:H.m===12&&H.d===10?L.eidA:L.eid;$("eidV").textContent=fmt(t.eid);
   const b=$("band"),start=Math.floor((t.wall[0]-60)/60)*60,end=Math.ceil((t.wall[5]+60)/60)*60,pc=w=>((w-start)/(end-start)*100).toFixed(2)+"%";
   let h=`<div class="track"><div class="daylight" style="inset-inline-start:${pc(t.wall[1])};width:${((t.wall[4]-t.wall[1])/(end-start)*100).toFixed(2)}%"></div></div>`;
   t.wall.forEach((w,i)=>{h+=`<div class="mk" style="inset-inline-start:${pc(w)}"></div><div class="lb ${i%2?"b":"a"} ${i===0?"first":i===5?"last":""}" style="inset-inline-start:${pc(w)}"><b>${pn(i)}</b><i class="num"><bdi>${fmt(w)}</bdi></i></div>`});
   if(isToday){const nw=st.n.h*60+st.n.min;if(nw>=start&&nw<=end)h+=`<div class="nowmk" style="inset-inline-start:${pc(nw)}"></div>`}
   b.innerHTML=h;
 }
+function renderRam(st){
+  const c=CITIES[S.city],L=TX[S.lang],hy=S.ramY,days=ramadan(hy);
+  $("mTitle").textContent=`${L.ramTitle} ${hy} ${L.ah}`;
+  const f=days[0],l=days[days.length-1],sm=a=>`${a.d} ${MON[S.lang][a.m-1]}`;
+  $("mLabel").textContent=`${sm(f)} – ${sm(l)} ${l.y}`;
+  $("legend").hidden=false;$("legendT").textContent=L.legRam;
+  $("mHead").innerHTML=`<tr><th scope="col">${L.ramDay}</th><th scope="col">${L.imsak}</th><th scope="col">${pn(0)}</th><th scope="col" class="opt">${pn(1)}</th><th scope="col" class="opt">${pn(2)}</th><th scope="col">${pn(3)}</th><th scope="col">${L.iftar}<span class="sub">${pn(4)}</span></th><th scope="col">${pn(5)}</th></tr>`;
+  const cell=(w,cls)=>`<td class="${cls||""}"><bdi>${fmt(w).replace(/ (.+)$/,'<span class="ap"> $1</span>')}</bdi></td>`;
+  let out="",prev=times(c,add(f,-1)).dst;
+  days.forEach((a,n)=>{const t=times(c,a);
+    if(t.dst!==prev){out+=`<tr class="shift"><td colspan="8">${t.dst?L.shiftOn:L.shiftOff}</td></tr>`;prev=t.dst}
+    const cls=same(a,st.n.date)?"today":same(a,S.sel)?"sel":"";
+    out+=`<tr class="${cls}"><td><button class="dbtn" type="button" data-iso="${a.y}-${a.m}-${a.d}"><b>${n+1}</b><span class="ds">${a.d}/${a.m}</span><span>${weekday(a,"short")}</span></button></td>${cell(t.wall[0]-10,"soft")}${cell(t.wall[0])}${cell(t.wall[1],"opt soft")}${cell(t.wall[2],"opt")}${cell(t.wall[3])}${cell(t.wall[4])}${cell(t.wall[5])}</tr>`});
+  const eid=add(l,1);out+=`<tr class="eidrow"><td colspan="8">${L.eidFrow}: ${weekday(eid,"long")} ${sm(eid)} ${eid.y} · ${fmt(times(c,eid).eid)}</td></tr>`;
+  $("mBody").innerHTML=out;
+}
 function renderMonth(st){
+  if(S.view==="ram")return renderRam(st);
   const c=CITIES[S.city],L=TX[S.lang],{y,m}=S.mon,days=new Date(Date.UTC(y,m,0)).getUTCDate();
   $("mTitle").textContent=L.month;$("mLabel").textContent=`${MON[S.lang][m-1]} ${y}`;
   $("mHead").innerHTML=`<tr><th scope="col">${L.day}</th>${P.map((_,i)=>`<th scope="col">${pn(i)}</th>`).join("")}</tr>`;
-  let out="",prev=times(c,add({y,m,d:1},-1)).dst;
+  let out="",anyRam=false,prev=times(c,add({y,m,d:1},-1)).dst;
   for(let d=1;d<=days;d++){
     const a={y,m,d},t=times(c,a);
     if(t.dst!==prev){out+=`<tr class="shift"><td colspan="7">${t.dst?L.shiftOn:L.shiftOff}</td></tr>`;prev=t.dst}
-    const cls=same(a,st.n.date)?"today":same(a,S.sel)?"sel":"";
-    out+=`<tr class="${cls}"><td><button class="dbtn" type="button" data-d="${d}"><b>${d}</b><span>${weekday(a,"short")}</span></button></td>${t.wall.map((w,i)=>`<td class="${i===1&&cls!=="today"?"soft":""}"><bdi>${fmt(w).replace(/ (.+)$/,'<span class="ap"> $1</span>')}</bdi></td>`).join("")}</tr>`;
+    const cls=(same(a,st.n.date)?"today":same(a,S.sel)?"sel":"")+(hp(a).m===9?" ram":"");if(hp(a).m===9)anyRam=true;
+    out+=`<tr class="${cls}"><td><button class="dbtn" type="button" data-iso="${y}-${m}-${d}"><b>${d}</b><span>${weekday(a,"short")}</span></button></td>${t.wall.map((w,i)=>`<td class="${i===1&&cls!=="today"?"soft":""}"><bdi>${fmt(w).replace(/ (.+)$/,'<span class="ap"> $1</span>')}</bdi></td>`).join("")}</tr>`;
   }
   $("mBody").innerHTML=out;
+  $("legend").hidden=!anyRam;$("legendT").textContent=L.legMonth;
 }
 function renderChrome(){
   const L=TX[S.lang],r=document.documentElement;
@@ -307,6 +344,8 @@ function renderChrome(){
   $("prev").setAttribute("aria-label",L.prev);$("next").setAttribute("aria-label",L.nextD);
   $("mPrev").setAttribute("aria-label",L.pm);$("mNext").setAttribute("aria-label",L.nm);
   $("tw").setAttribute("aria-label",L.month);
+  $("vMonth").textContent=L.vMonth;$("vRam").textContent=L.vRam;$("viewSeg").hidden=!HOK;if(!HOK)S.view="month";
+  $("vMonth").setAttribute("aria-pressed",S.view==="month");$("vRam").setAttribute("aria-pressed",S.view==="ram");
   const g=GROUPS[S.lang],order=[0,-60,60,90,120,180,240];
   $("city").innerHTML=order.map(o=>`<optgroup label="${g[o]}">${CITIES.map((c,i)=>c[0]===o?`<option value="${i}" ${i===S.city?"selected":""}>${cn(c)}</option>`:"").join("")}</optgroup>`).join("");
   $("notes").innerHTML=L.hNotes.map(n=>`<div><h3>${n[0]}</h3>${n[1]}</div>`).join("");
@@ -314,22 +353,26 @@ function renderChrome(){
 }
 function full(){renderChrome();tick(true)}
 function tick(force){
-  const st=renderHero(),k=[st.n.date.y,st.n.date.m,st.n.date.d,st.n.h,st.n.min,S.city,S.lang,S.h24,S.sel&&S.sel.d,S.sel&&S.sel.m,S.sel&&S.sel.y,S.mon&&S.mon.m,S.mon&&S.mon.y,st.e.i].join();
-  if(!S.sel){S.sel=st.n.date;S.mon={y:st.n.date.y,m:st.n.date.m}}
+  const st=renderHero(),k=[st.n.date.y,st.n.date.m,st.n.date.d,st.n.h,st.n.min,S.city,S.lang,S.h24,S.sel&&S.sel.d,S.sel&&S.sel.m,S.sel&&S.sel.y,S.mon&&S.mon.m,S.mon&&S.mon.y,st.e.i,S.view,S.ramY].join();
+  if(!S.sel){S.sel=st.n.date;S.mon={y:st.n.date.y,m:st.n.date.m};S.ramY=curRamYear(st.n.date)}
   if(force||k!==S.lastKey){renderDay(st);renderMonth(st);S.lastKey=k}
 }
 function select(a){S.sel=a;S.mon={y:a.y,m:a.m};tick(true)}
 $("prev").onclick=()=>select(add(S.sel,-1));
 $("next").onclick=()=>select(add(S.sel,1));
 $("back").onclick=()=>select(nowIn(CITIES[S.city]).date);
-$("mPrev").onclick=()=>{const a=ymd(S.mon.y,S.mon.m-1,1);S.mon={y:a.y,m:a.m};tick(true)};
-$("mNext").onclick=()=>{const a=ymd(S.mon.y,S.mon.m+1,1);S.mon={y:a.y,m:a.m};tick(true)};
-$("mBody").onclick=e=>{const b=e.target.closest("[data-d]");if(b){S.sel={y:S.mon.y,m:S.mon.m,d:+b.dataset.d};tick(true);$("app").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"})}};
+$("mPrev").onclick=()=>{if(S.view==="ram"){S.ramY--;return tick(true)}const a=ymd(S.mon.y,S.mon.m-1,1);S.mon={y:a.y,m:a.m};tick(true)};
+$("mNext").onclick=()=>{if(S.view==="ram"){S.ramY++;return tick(true)}const a=ymd(S.mon.y,S.mon.m+1,1);S.mon={y:a.y,m:a.m};tick(true)};
+$("mBody").onclick=e=>{const b=e.target.closest("[data-iso]");if(b){const q=b.dataset.iso.split("-").map(Number);S.sel={y:q[0],m:q[1],d:q[2]};tick(true);$("app").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"})}};
 $("city").onchange=e=>{S.city=+e.target.value;store.set("city",CITIES[S.city][2]);tick(true)};
 $("f12").onclick=()=>{S.h24=false;store.set("h24","0");full()};
 $("f24").onclick=()=>{S.h24=true;store.set("h24","1");full()};
 $("lEn").onclick=()=>{S.lang="en";store.set("lang","en");full()};
 $("lAr").onclick=()=>{S.lang="ar";store.set("lang","ar");full()};
+function setView(v){S.view=v;try{history.replaceState(null,"",v==="ram"?"#ramadan":location.pathname+location.search)}catch(e){}full()}
+$("vMonth").onclick=()=>setView("month");
+$("vRam").onclick=()=>setView("ram");
+window.addEventListener("hashchange",()=>setView(location.hash==="#ramadan"?"ram":"month"));
 full();
 setInterval(()=>tick(false),1000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)tick(true)});
