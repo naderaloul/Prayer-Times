@@ -140,6 +140,7 @@ th .sub{display:block;font-weight:400;font-size:.75rem}
 .btn.pri{background:var(--on-b);color:var(--burgundy);border-color:var(--on-b)}
 .btn:hover{filter:brightness(1.08)}
 .qmsg{margin:0;font-size:var(--s-sm);color:var(--on-b-muted);min-height:1.2em}
+[dir=rtl] .qdeg{text-align:right}
 #rose{transition:transform .15s linear}
 @media (prefers-reduced-motion:reduce){#rose{transition:none}}
 .notes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 32px;padding-top:12px;border-top:1px solid var(--line)}
@@ -149,6 +150,7 @@ th .sub{display:block;font-weight:400;font-size:.75rem}
 .notes dt{font-weight:600;white-space:nowrap}.notes dd{margin:0;color:var(--muted)}
 @media (max-width:860px){
   .grid,.notes,.qgrid{grid-template-columns:minmax(0,1fr)}
+  .qdial{order:-1}
   .top{align-items:stretch}.controls{width:100%}
   .field{flex:1 1 100%}.field select{flex:1;max-width:none}
   .seg{flex:1}.seg button{flex:1}
@@ -459,7 +461,7 @@ function qOrient(){
   $("rose").style.transform=`rotate(${(-Q.h).toFixed(1)}deg)`;$("phonePtr").setAttribute("visibility","visible");
   const d=((q.b-Q.h+540)%360)-180;
   if(Math.abs(d)<=4){st.className="st ok";st.textContent=L.qAligned}
-  else{st.className="st";st.textContent=(d>0?L.qRight:L.qLeft)+Math.round(Math.abs(d))+"°"}
+  else{st.className="st";st.innerHTML=(d>0?L.qRight:L.qLeft)+`<bdi dir="ltr">${Math.round(Math.abs(d))}°</bdi>`}
 }
 function onOri(e){
   let h=null;
