@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Al-Aqsa Prayer Times</title>
 </head>
 <body style="margin:0">
 <title>Al-Aqsa Prayer Times</title>
@@ -20,6 +21,7 @@
 }
 [dir=rtl]{--s:-1}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html{-webkit-text-size-adjust:100%}
 body{background:var(--charcoal);color:var(--fg);font-family:var(--font);font-size:1rem;line-height:1.45}
 button,select{font:inherit;color:inherit}
@@ -116,13 +118,37 @@ tr.eidrow td{color:var(--rose)}
 .dbtn span.ds{color:var(--fg)}
 th .sub{display:block;font-weight:400;font-size:.75rem}
 .ramchip{display:inline-block;margin-inline-start:8px;padding:1px 8px;border-radius:99px;background:var(--burgundy);color:var(--on-b);font-size:var(--s-xs);vertical-align:middle}
+.mtabs{display:flex;gap:4px;border-bottom:1px solid var(--line)}
+.mtabs button{background:none;border:0;border-bottom:3px solid transparent;margin-bottom:-1px;min-height:46px;padding-inline:16px;cursor:pointer;color:var(--muted);font-size:var(--s-md);font-weight:600}
+.mtabs button:hover{color:var(--fg)}
+.mtabs button[aria-selected=true]{color:var(--fg);border-bottom-color:var(--rose)}
+#pTimes{display:grid;gap:20px}
+.qgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:stretch}
+.qdial{background:var(--charcoal-up);border-radius:14px;padding:clamp(16px,3vw,28px);display:grid;place-items:center;gap:12px;min-width:0}
+.qdial svg{width:min(100%,360px);height:auto;display:block}
+.qdial .st{margin:0;min-height:1.5em;text-align:center;font-weight:600;font-size:var(--s-md)}
+.qdial .st.ok{color:var(--rose)}
+.qinfo{background:var(--burgundy);color:var(--on-b);border-radius:14px;padding:clamp(22px,4vw,36px);display:flex;flex-direction:column;gap:22px;min-width:0}
+.qinfo .label{margin:0;font-size:var(--s-sm);color:var(--on-b-muted)}
+.qdeg{margin:2px 0 0;font-size:clamp(3.5rem,10vw,6rem);font-weight:300;line-height:1}
+.qpt{margin:6px 0 0;font-size:var(--s-lg)}
+.qinfo dl{margin:0;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 16px;font-size:var(--s-sm);align-items:baseline}
+.qinfo dd{text-align:end;white-space:nowrap}
+.qinfo dt{color:var(--on-b-muted)}.qinfo dd{margin:0;font-weight:600}
+.qbtns{display:flex;flex-wrap:wrap;gap:8px;margin-top:auto}
+.btn{min-height:44px;padding-inline:16px;border-radius:8px;cursor:pointer;font-weight:600;border:1px solid var(--on-b-muted);background:none;color:var(--on-b)}
+.btn.pri{background:var(--on-b);color:var(--burgundy);border-color:var(--on-b)}
+.btn:hover{filter:brightness(1.08)}
+.qmsg{margin:0;font-size:var(--s-sm);color:var(--on-b-muted);min-height:1.2em}
+#rose{transition:transform .15s linear}
+@media (prefers-reduced-motion:reduce){#rose{transition:none}}
 .notes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 32px;padding-top:12px;border-top:1px solid var(--line)}
 .notes h3{margin:0 0 6px;font-size:var(--s-md);font-weight:600}
 .notes p{margin:0 0 8px;color:var(--muted);font-size:var(--s-sm);max-width:62ch}
 .notes dl{margin:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 14px;font-size:var(--s-sm)}
 .notes dt{font-weight:600;white-space:nowrap}.notes dd{margin:0;color:var(--muted)}
 @media (max-width:860px){
-  .grid,.notes{grid-template-columns:minmax(0,1fr)}
+  .grid,.notes,.qgrid{grid-template-columns:minmax(0,1fr)}
   .top{align-items:stretch}.controls{width:100%}
   .field{flex:1 1 100%}.field select{flex:1;max-width:none}
   .seg{flex:1}.seg button{flex:1}
@@ -151,6 +177,34 @@ th .sub{display:block;font-weight:400;font-size:.75rem}
     </div>
   </header>
 
+  <div class="mtabs" role="tablist" id="mtabs"><button role="tab" id="tbTimes" aria-controls="pTimes" type="button"></button><button role="tab" id="tbQibla" aria-controls="pQibla" type="button"></button></div>
+
+  <section id="pQibla" role="tabpanel" aria-labelledby="tbQibla" hidden>
+    <div class="qgrid">
+      <div class="qinfo">
+        <div>
+          <p class="label" id="qFrom"></p>
+          <p class="qdeg num" dir="ltr" id="qDeg"></p>
+          <p class="qpt" id="qPt"></p>
+        </div>
+        <dl id="qDl"></dl>
+        <div class="qbtns"><button class="btn pri" id="qComp" type="button"></button><button class="btn" id="qLoc" type="button"></button></div>
+        <p class="qmsg" id="qMsg" role="status"></p>
+      </div>
+      <div class="qdial">
+        <svg viewBox="-160 -160 320 320" role="img" id="qSvg">
+          <circle r="150" fill="var(--charcoal)" stroke="var(--line)" stroke-width="1"/>
+          <g id="rose"></g>
+          <path d="M0 -158 L-9 -140 L9 -140 Z" fill="var(--fg)" id="phonePtr" visibility="hidden"/>
+          <circle r="5" fill="var(--fg)"/>
+        </svg>
+        <p class="st" id="qSt"></p>
+      </div>
+    </div>
+    <div class="notes" style="margin-top:20px"><div><h3 id="qHowT"></h3><p id="qHow"></p></div><div><h3 id="qAccT"></h3><p id="qAcc"></p></div></div>
+  </section>
+
+  <div id="pTimes" role="tabpanel" aria-labelledby="tbTimes">
   <div class="grid">
     <section class="hero" aria-labelledby="nextName">
       <div class="where"><span id="hWhere"></span><span id="hNow" class="num"></span></div>
@@ -194,6 +248,7 @@ th .sub{display:block;font-weight:400;font-size:.75rem}
   </section>
 
   <footer class="notes" id="notes"></footer>
+  </div>
 </div>
 
 <script>
@@ -207,14 +262,15 @@ const CITIES=[
  [180,"Asia/Gaza","Gaza","غزة"],
  [240,"Asia/Gaza","Rafah","رفح"],[240,"Asia/Gaza","Khan Younis","خان يونس"],[240,"Asia/Gaza","Deir al-Balah","دير البلح"]
 ];
+const COORD={"Jerusalem":[31.7781,35.2354],"Ramallah":[31.903,35.204],"Bethlehem":[31.705,35.202],"Jenin":[32.461,35.296],"Nablus":[32.222,35.262],"Nazareth":[32.7,35.303],"Umm al-Fahm":[32.519,35.153],"Jericho":[31.857,35.462],"Tiberias":[32.792,35.531],"Safad":[32.965,35.496],"Beisan":[32.497,35.497],"Hebron":[31.532,35.099],"Idhna":[31.559,34.976],"Dura":[31.507,35.028],"Beit Awwa":[31.511,34.95],"Haifa":[32.794,34.99],"Acre":[32.928,35.076],"Tulkarm":[32.31,35.028],"Kafr Qasim":[32.114,34.976],"Tayibe":[32.266,35.009],"Lydd":[31.951,34.895],"Ramla":[31.929,34.866],"Qalqilya":[32.19,34.97],"Beersheba":[31.252,34.791],"Jaffa":[32.05,34.752],"Gaza":[31.502,34.467],"Rafah":[31.287,34.25],"Khan Younis":[31.346,34.306],"Deir al-Balah":[31.418,34.351]};
 const P=[["Fajr","الفجر"],["Sunrise","الشروق"],["Dhuhr","الظهر"],["Asr","العصر"],["Maghrib","المغرب"],["Isha","العشاء"]];
 const MON={en:["January","February","March","April","May","June","July","August","September","October","November","December"],ar:["كانون الثاني","شباط","آذار","نيسان","أيار","حزيران","تموز","آب","أيلول","تشرين الأول","تشرين الثاني","كانون الأول"]};
 const GROUPS={en:{0:"Same as Al-Aqsa","-60":"1 minute earlier",60:"1 minute later",90:"1½ minutes later",120:"2 minutes later",180:"3 minutes later",240:"4 minutes later"},ar:{0:"بلا فارق زمني","-60":"قبل القدس بدقيقة",60:"بعد القدس بدقيقة",90:"بعد القدس بدقيقة ونصف",120:"بعد القدس بدقيقتين",180:"بعد القدس بثلاث دقائق",240:"بعد القدس بأربع دقائق"}};
 const TX={
- en:{name:"Al-Aqsa Prayer Times",sub:"Perpetual timetable of the Palestinian Dar al-Ifta",city:"City",next:"Next",sunNext:"Next",inL:"Starts in",sunIn:"Fajr ends in",tomorrow:"tomorrow",nextChip:"Next",nowChip:"Now",eid:"Eid prayer begins, if this date is Eid",today:"Back to today",month:"Full month",day:"Day",summer:"Summer time: 1 hour added",winter:"Winter time",prev:"Previous day",nextD:"Next day",pm:"Previous month",nm:"Next month",fmt:"Time format",vMonth:"Month",vRam:"Ramadan",ramTitle:"Ramadan",ah:"AH",ramDay:"Ramadan",imsak:"Imsak",imsakAlt:"10 min before Fajr",iftar:"Iftar",suhoor:"Suhoor ends",iftarIn:"Iftar in",eidF:"Eid al-Fitr prayer (expected)",eidA:"Eid al-Adha prayer (expected)",eidFrow:"Eid al-Fitr (expected)",legMonth:"Marked days fall in Ramadan (expected dates).",legRam:"Expected dates. Ramadan begins and ends on the moon sighting announced by Dar al-Ifta. Imsak is set 10 minutes before Fajr.",
+ en:{name:"Al-Aqsa Prayer Times",sub:"Perpetual timetable of the Palestinian Dar al-Ifta",city:"City",next:"Next",sunNext:"Next",inL:"Starts in",sunIn:"Fajr ends in",tomorrow:"tomorrow",nextChip:"Next",nowChip:"Now",eid:"Eid prayer begins, if this date is Eid",today:"Back to today",month:"Full month",day:"Day",summer:"Summer time: 1 hour added",winter:"Winter time",prev:"Previous day",nextD:"Next day",pm:"Previous month",nm:"Next month",fmt:"Time format",tbTimes:"Prayer times",tbQibla:"Qibla",qFrom:"Qibla direction from",qMine:"your location",qPt:["north","north-northeast","northeast","east-northeast","east","east-southeast","southeast","south-southeast","south","south-southwest","southwest","west-southwest","west","west-northwest","northwest","north-northwest"],qPtPre:"Facing ",qDegL:"Angle from true north, clockwise",qDistL:"Distance to the Kaaba",km:"km",qMagL:"On a magnetic compass",qStart:"Start live compass",qStop:"Stop compass",qLoc:"Use my location",qCity:"Use selected city",qWait:"Waiting for compass readings…",qNoSensor:"This device or browser gives no compass readings. Use the angle with a handheld compass instead.",qDenied:"Compass access was refused. Allow motion and orientation access for this site in your browser settings.",qLocErr:"Your location isn't available here. The Qibla is shown for the selected city.",qLocOk:"Using your current location.",qAligned:"You are facing the Qibla",qRight:"Turn right ",qLeft:"Turn left ",qStatic:"North is at the top. The Kaaba marker shows the Qibla.",qHowT:"How to use it",qHow:"Tap Start live compass and hold the phone flat, away from metal, magnets and speakers. Turn slowly until the marker meets the pointer at the top. If the reading jumps, move the phone in a figure-eight to recalibrate.",qAccT:"Accuracy",qAcc:"The angle is the shortest route on the globe from your city to the Kaaba (21.4225° N, 39.8262° E). Phone compasses read magnetic north, which is about 5° east of true north here, so the app adds 5°. A phone reading can still drift by 5–10°; check it against a fixed landmark when it matters.",cardinal:["N","E","S","W"],vMonth:"Month",vRam:"Ramadan",ramTitle:"Ramadan",ah:"AH",ramDay:"Ramadan",imsak:"Imsak",imsakAlt:"10 min before Fajr",iftar:"Iftar",suhoor:"Suhoor ends",iftarIn:"Iftar in",eidF:"Eid al-Fitr prayer (expected)",eidA:"Eid al-Adha prayer (expected)",eidFrow:"Eid al-Fitr (expected)",legMonth:"Marked days fall in Ramadan (expected dates).",legRam:"Expected dates. Ramadan begins and ends on the moon sighting announced by Dar al-Ifta. Imsak is set 10 minutes before Fajr.",
   shiftOn:"Summer time starts. Times below include 1 added hour.",shiftOff:"Winter time starts. Times below return to the printed table.",
   hNotes:[["Source","<p>Times come from توقيت الصلاة الدهري, the perpetual timetable issued by the Palestinian Dar al-Ifta (Jerusalem, 1433 AH / 2012), set for Al-Aqsa Mosque. It covers all 366 days and repeats every year.</p><p>The printed table is in winter time. This app adds one hour on dates when the selected city is on summer time, using your browser's time zone database. West Bank, Gaza and Jerusalem-area cities can change clocks on different dates.</p><p>The Hijri date is calculated with the Umm al-Qura calendar and can differ by a day from the date announced locally.</p><p>Ramadan and Eid dates use the same calendar, so they are expected dates only. The booklet does not list Imsak; the app shows it 10 minutes before Fajr, the common local convention.</p>"],["City differences","<p>The booklet sets these differences from Jerusalem. The 1½-minute cities are rounded so that prayers show the later minute and sunrise shows the earlier one.</p><dl id=\"dl\"></dl>"]]},
- ar:{name:"توقيت الصلاة الدهري",sub:"حسب توقيت المسجد الأقصى المبارك، دار الإفتاء الفلسطينية",city:"المدينة",next:"الصلاة القادمة",sunNext:"القادم",inL:"يبدأ وقتها بعد",sunIn:"ينتهي وقت الفجر بعد",tomorrow:"غداً",nextChip:"القادمة",nowChip:"الآن",eid:"بدء صلاة العيد، إذا وافق هذا اليوم العيد",today:"العودة إلى اليوم",month:"الشهر كاملاً",day:"اليوم",summer:"التوقيت الصيفي: أضيفت ساعة",winter:"التوقيت الشتوي",prev:"اليوم السابق",nextD:"اليوم التالي",pm:"الشهر السابق",nm:"الشهر التالي",fmt:"صيغة الوقت",vMonth:"الشهر",vRam:"رمضان",ramTitle:"إمساكية رمضان",ah:"هـ",ramDay:"رمضان",imsak:"الإمساك",imsakAlt:"قبل الفجر بعشر دقائق",iftar:"الإفطار",suhoor:"نهاية السحور",iftarIn:"الإفطار بعد",eidF:"صلاة عيد الفطر (متوقع)",eidA:"صلاة عيد الأضحى (متوقع)",eidFrow:"عيد الفطر (متوقع)",legMonth:"الأيام المعلَّمة من شهر رمضان (تواريخ متوقعة).",legRam:"تواريخ متوقعة؛ يبدأ رمضان وينتهي بإعلان دار الإفتاء رؤية الهلال. الإمساك قبل الفجر بعشر دقائق.",
+ ar:{name:"توقيت الصلاة الدهري",sub:"حسب توقيت المسجد الأقصى المبارك، دار الإفتاء الفلسطينية",city:"المدينة",next:"الصلاة القادمة",sunNext:"القادم",inL:"يبدأ وقتها بعد",sunIn:"ينتهي وقت الفجر بعد",tomorrow:"غداً",nextChip:"القادمة",nowChip:"الآن",eid:"بدء صلاة العيد، إذا وافق هذا اليوم العيد",today:"العودة إلى اليوم",month:"الشهر كاملاً",day:"اليوم",summer:"التوقيت الصيفي: أضيفت ساعة",winter:"التوقيت الشتوي",prev:"اليوم السابق",nextD:"اليوم التالي",pm:"الشهر السابق",nm:"الشهر التالي",fmt:"صيغة الوقت",tbTimes:"أوقات الصلاة",tbQibla:"القبلة",qFrom:"اتجاه القبلة من",qMine:"موقعك الحالي",qPt:["شمال","شمال-شمال شرق","شمال شرق","شرق-شمال شرق","شرق","شرق-جنوب شرق","جنوب شرق","جنوب-جنوب شرق","جنوب","جنوب-جنوب غرب","جنوب غرب","غرب-جنوب غرب","غرب","غرب-شمال غرب","شمال غرب","شمال-شمال غرب"],qPtPre:"باتجاه ",qDegL:"الزاوية من الشمال الجغرافي باتجاه عقارب الساعة",qDistL:"المسافة إلى الكعبة",km:"كم",qMagL:"على البوصلة المغناطيسية",qStart:"تشغيل البوصلة",qStop:"إيقاف البوصلة",qLoc:"استخدم موقعي",qCity:"استخدم المدينة المختارة",qWait:"بانتظار قراءة البوصلة…",qNoSensor:"هذا الجهاز أو المتصفح لا يعطي قراءة بوصلة. استخدم الزاوية مع بوصلة يدوية.",qDenied:"رُفض الوصول إلى البوصلة. اسمح لهذا الموقع بالوصول إلى الحركة والاتجاه من إعدادات المتصفح.",qLocErr:"موقعك غير متاح هنا، والقبلة معروضة للمدينة المختارة.",qLocOk:"يُستخدم موقعك الحالي.",qAligned:"أنت باتجاه القبلة",qRight:"استدر يميناً ",qLeft:"استدر يساراً ",qStatic:"الشمال في الأعلى، وعلامة الكعبة تشير إلى القبلة.",qHowT:"طريقة الاستخدام",qHow:"اضغط «تشغيل البوصلة» وأمسك الهاتف أفقياً بعيداً عن المعادن والمغناطيس ومكبرات الصوت. استدر ببطء حتى تلتقي علامة الكعبة بالمؤشر في الأعلى. إن اضطربت القراءة فحرّك الهاتف على شكل الرقم 8 لمعايرته.",qAccT:"الدقة",qAcc:"الزاوية هي أقصر مسار على الكرة الأرضية من مدينتك إلى الكعبة (21.4225° شمالاً، 39.8262° شرقاً). تقرأ بوصلة الهاتف الشمال المغناطيسي، وهو هنا شرق الشمال الجغرافي بنحو 5°، لذا يضيف التطبيق 5°. وقد تنحرف قراءة الهاتف 5–10°، فتحقّق بمعلم ثابت عند الحاجة.",cardinal:["ش","ق","ج","غ"],vMonth:"الشهر",vRam:"رمضان",ramTitle:"إمساكية رمضان",ah:"هـ",ramDay:"رمضان",imsak:"الإمساك",imsakAlt:"قبل الفجر بعشر دقائق",iftar:"الإفطار",suhoor:"نهاية السحور",iftarIn:"الإفطار بعد",eidF:"صلاة عيد الفطر (متوقع)",eidA:"صلاة عيد الأضحى (متوقع)",eidFrow:"عيد الفطر (متوقع)",legMonth:"الأيام المعلَّمة من شهر رمضان (تواريخ متوقعة).",legRam:"تواريخ متوقعة؛ يبدأ رمضان وينتهي بإعلان دار الإفتاء رؤية الهلال. الإمساك قبل الفجر بعشر دقائق.",
   shiftOn:"يبدأ التوقيت الصيفي. الأوقات أدناه تشمل ساعة مضافة.",shiftOff:"يبدأ التوقيت الشتوي. الأوقات أدناه تعود إلى الجدول المطبوع.",
   hNotes:[["المصدر","<p>الأوقات مأخوذة من «توقيت الصلاة الدهري» الصادر عن دار الإفتاء الفلسطينية (القدس، 1433هـ - 2012م) حسب توقيت المسجد الأقصى المبارك، ويغطي 366 يوماً ويتكرر كل عام.</p><p>الجدول المطبوع بالتوقيت الشتوي. يضيف التطبيق ساعة في الأيام التي تكون فيها المدينة المختارة على التوقيت الصيفي، بالاعتماد على بيانات المناطق الزمنية في المتصفح. وقد يختلف موعد تغيير الساعة بين الضفة وغزة ومنطقة القدس.</p><p>التاريخ الهجري محسوب وفق تقويم أم القرى، وقد يختلف بيوم عن التاريخ المعلن محلياً.</p><p>تواريخ رمضان والعيدين محسوبة بالتقويم نفسه فهي متوقعة فقط. لا يتضمن التوقيت الدهري وقت الإمساك؛ يعرضه التطبيق قبل الفجر بعشر دقائق وفق العُرف المحلي الشائع.</p>"],["فروق التوقيت","<p>هذه الفروق عن القدس كما وردت في التوقيت الدهري. في مدن الدقيقة والنصف تُقرَّب الصلوات إلى الدقيقة اللاحقة والشروق إلى الدقيقة السابقة.</p><dl id=\"dl\"></dl>"]]}
 };
@@ -344,6 +400,7 @@ function renderChrome(){
   $("prev").setAttribute("aria-label",L.prev);$("next").setAttribute("aria-label",L.nextD);
   $("mPrev").setAttribute("aria-label",L.pm);$("mNext").setAttribute("aria-label",L.nm);
   $("tw").setAttribute("aria-label",L.month);
+  $("tbTimes").textContent=L.tbTimes;$("tbQibla").textContent=L.tbQibla;$("mtabs").setAttribute("aria-label",L.tbQibla+" / "+L.tbTimes);if(S.tab==="qibla")qPaint();
   $("vMonth").textContent=L.vMonth;$("vRam").textContent=L.vRam;$("viewSeg").hidden=!HOK;if(!HOK)S.view="month";
   $("vMonth").setAttribute("aria-pressed",S.view==="month");$("vRam").setAttribute("aria-pressed",S.view==="ram");
   const g=GROUPS[S.lang],order=[0,-60,60,90,120,180,240];
@@ -364,16 +421,90 @@ $("back").onclick=()=>select(nowIn(CITIES[S.city]).date);
 $("mPrev").onclick=()=>{if(S.view==="ram"){S.ramY--;return tick(true)}const a=ymd(S.mon.y,S.mon.m-1,1);S.mon={y:a.y,m:a.m};tick(true)};
 $("mNext").onclick=()=>{if(S.view==="ram"){S.ramY++;return tick(true)}const a=ymd(S.mon.y,S.mon.m+1,1);S.mon={y:a.y,m:a.m};tick(true)};
 $("mBody").onclick=e=>{const b=e.target.closest("[data-iso]");if(b){const q=b.dataset.iso.split("-").map(Number);S.sel={y:q[0],m:q[1],d:q[2]};tick(true);$("app").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"})}};
-$("city").onchange=e=>{S.city=+e.target.value;store.set("city",CITIES[S.city][2]);tick(true)};
+$("city").onchange=e=>{S.city=+e.target.value;store.set("city",CITIES[S.city][2]);Q.loc=null;$("qMsg").textContent="";tick(true);if(S.tab==="qibla")qPaint()};
 $("f12").onclick=()=>{S.h24=false;store.set("h24","0");full()};
 $("f24").onclick=()=>{S.h24=true;store.set("h24","1");full()};
 $("lEn").onclick=()=>{S.lang="en";store.set("lang","en");full()};
 $("lAr").onclick=()=>{S.lang="ar";store.set("lang","ar");full()};
-function setView(v){S.view=v;try{history.replaceState(null,"",v==="ram"?"#ramadan":location.pathname+location.search)}catch(e){}full()}
+const KAABA=[21.4225,39.8262],DECL=5,rad=x=>x*Math.PI/180,deg=x=>x*180/Math.PI;
+function qibla(la,lo){const p1=rad(la),p2=rad(KAABA[0]),dl=rad(KAABA[1]-lo);
+  const b=(deg(Math.atan2(Math.sin(dl)*Math.cos(p2),Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl)))+360)%360;
+  const a=Math.sin((p2-p1)/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;return{b,km:6371*2*Math.asin(Math.sqrt(a))}}
+const Q={on:false,h:null,loc:null,evt:null,timer:0};
+const pol=(r,a)=>[(r*Math.sin(rad(a))).toFixed(2),(-r*Math.cos(rad(a))).toFixed(2)];
+function qTarget(){const c=CITIES[S.city],ll=Q.loc||COORD[c[2]];return qibla(ll[0],ll[1])}
+function drawRose(){
+  const L=TX[S.lang],q=qTarget();let g="";
+  for(let a=0;a<360;a+=5){const big=a%30===0,[x1,y1]=pol(150,a),[x2,y2]=pol(big?134:a%10===0?141:145,a);g+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="var(${big?"--fg":"--muted"})" stroke-width="${big?2:1}"/>`}
+  L.cardinal.forEach((t,i)=>{const[x,y]=pol(116,i*90);g+=`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" fill="var(${i?"--muted":"--rose"})" font-size="17" font-weight="600" font-family="inherit">${t}</text>`});
+  const[ex,ey]=pol(96,q.b),[kx,ky]=pol(96,q.b);
+  g+=`<line x1="0" y1="0" x2="${ex}" y2="${ey}" stroke="var(--rose)" stroke-width="4" stroke-linecap="round"/>`;
+  g+=`<g transform="translate(${kx} ${ky}) rotate(${q.b.toFixed(1)})"><rect x="-13" y="-13" width="26" height="26" rx="2" fill="#111214" stroke="var(--rose)" stroke-width="2"/><rect x="-13" y="-7" width="26" height="5" fill="#c9a24a"/></g>`;
+  $("rose").innerHTML=g;
+}
+function qPaint(){
+  const L=TX[S.lang],c=CITIES[S.city],q=qTarget();
+  $("qFrom").textContent=`${L.qFrom} ${Q.loc?L.qMine:cn(c)}`;
+  $("qDeg").textContent=`${q.b.toFixed(1)}°`;
+  $("qPt").textContent=L.qPtPre+L.qPt[Math.round(q.b/22.5)%16];
+  $("qDl").innerHTML=`<dt>${L.qDegL}</dt><dd class="num" dir="ltr">${q.b.toFixed(1)}°</dd><dt>${L.qMagL}</dt><dd class="num" dir="ltr">${((q.b-DECL+360)%360).toFixed(1)}°</dd><dt>${L.qDistL}</dt><dd class="num">${Math.round(q.km).toLocaleString("en")} ${L.km}</dd>`;
+  $("qComp").textContent=Q.on?L.qStop:L.qStart;$("qLoc").textContent=Q.loc?L.qCity:L.qLoc;
+  $("qSvg").setAttribute("aria-label",`${L.tbQibla} ${q.b.toFixed(0)}°`);
+  $("qHowT").textContent=L.qHowT;$("qHow").textContent=L.qHow;$("qAccT").textContent=L.qAccT;$("qAcc").textContent=L.qAcc;
+  drawRose();qOrient();
+}
+function qOrient(){
+  const L=TX[S.lang],st=$("qSt"),q=qTarget();
+  if(!Q.on||Q.h==null){$("rose").style.transform="";$("phonePtr").setAttribute("visibility","hidden");st.className="st";st.textContent=Q.on?L.qWait:L.qStatic;return}
+  $("rose").style.transform=`rotate(${(-Q.h).toFixed(1)}deg)`;$("phonePtr").setAttribute("visibility","visible");
+  const d=((q.b-Q.h+540)%360)-180;
+  if(Math.abs(d)<=4){st.className="st ok";st.textContent=L.qAligned}
+  else{st.className="st";st.textContent=(d>0?L.qRight:L.qLeft)+Math.round(Math.abs(d))+"°"}
+}
+function onOri(e){
+  let h=null;
+  if(typeof e.webkitCompassHeading==="number"&&!isNaN(e.webkitCompassHeading))h=e.webkitCompassHeading;
+  else if((e.absolute||e.type==="deviceorientationabsolute")&&e.alpha!=null)h=360-e.alpha;
+  if(h==null)return;
+  clearTimeout(Q.timer);
+  const ang=(screen.orientation&&screen.orientation.angle)||window.orientation||0;
+  h=(h+ang+DECL+360)%360;
+  if(Q.h==null)Q.h=h;else{const d=((h-Q.h+540)%360)-180;Q.h=(Q.h+d*.3+360)%360}
+  qOrient();
+}
+function stopCompass(){if(Q.evt)window.removeEventListener(Q.evt,onOri,true);Q.on=false;Q.h=null;Q.evt=null;clearTimeout(Q.timer);qPaint()}
+async function startCompass(){
+  const L=TX[S.lang];$("qMsg").textContent="";
+  if(typeof DeviceOrientationEvent==="undefined"){$("qMsg").textContent=L.qNoSensor;return}
+  if(typeof DeviceOrientationEvent.requestPermission==="function"){try{if(await DeviceOrientationEvent.requestPermission()!=="granted"){$("qMsg").textContent=L.qDenied;return}}catch(e){$("qMsg").textContent=L.qDenied;return}}
+  Q.evt="ondeviceorientationabsolute" in window?"deviceorientationabsolute":"deviceorientation";
+  window.addEventListener(Q.evt,onOri,true);Q.on=true;Q.h=null;qPaint();
+  Q.timer=setTimeout(()=>{if(Q.h==null){stopCompass();$("qMsg").textContent=TX[S.lang].qNoSensor}},3500);
+}
+$("qComp").onclick=()=>Q.on?stopCompass():startCompass();
+$("qLoc").onclick=()=>{
+  const L=TX[S.lang];
+  if(Q.loc){Q.loc=null;$("qMsg").textContent="";return qPaint()}
+  if(!navigator.geolocation){$("qMsg").textContent=L.qLocErr;return}
+  navigator.geolocation.getCurrentPosition(p=>{Q.loc=[p.coords.latitude,p.coords.longitude];$("qMsg").textContent=TX[S.lang].qLocOk;qPaint()},()=>{$("qMsg").textContent=TX[S.lang].qLocErr},{enableHighAccuracy:true,timeout:10000,maximumAge:600000});
+};
+function showTab(t){
+  S.tab=t;$("pQibla").hidden=t!=="qibla";$("pTimes").hidden=t==="qibla";
+  $("tbTimes").setAttribute("aria-selected",t!=="qibla");$("tbQibla").setAttribute("aria-selected",t==="qibla");
+  $("tbTimes").tabIndex=t==="qibla"?-1:0;$("tbQibla").tabIndex=t==="qibla"?0:-1;
+  if(t!=="qibla"&&Q.on)stopCompass();
+  if(t==="qibla")qPaint();
+}
+function setHash(h){try{history.replaceState(null,"",h||location.pathname+location.search)}catch(e){}}
+$("tbTimes").onclick=()=>{setHash(S.view==="ram"?"#ramadan":"");showTab("times")};
+$("tbQibla").onclick=()=>{setHash("#qibla");showTab("qibla")};
+$("mtabs").onkeydown=e=>{if(e.key==="ArrowLeft"||e.key==="ArrowRight"){const t=S.tab==="qibla"?"tbTimes":"tbQibla";$(t).click();$(t).focus()}};
+function setView(v){S.view=v;setHash(v==="ram"?"#ramadan":"");full()}
 $("vMonth").onclick=()=>setView("month");
 $("vRam").onclick=()=>setView("ram");
-window.addEventListener("hashchange",()=>setView(location.hash==="#ramadan"?"ram":"month"));
+window.addEventListener("hashchange",()=>{if(location.hash==="#qibla")return showTab("qibla");showTab("times");S.view=location.hash==="#ramadan"?"ram":"month";full()});
 full();
+showTab(location.hash==="#qibla"?"qibla":"times");
 setInterval(()=>tick(false),1000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)tick(true)});
 </script>
